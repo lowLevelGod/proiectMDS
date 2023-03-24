@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "test": "node node_modules/nodemon/bin/nodemon.js app.js",
-    "startredis": "docker run -p 6379:6379 -it redis/redis-stack-server:latest"
+    "startredis": "docker run -p 6379:6379 --name redisMDS -it redis/redis-stack-server:latest",
+    "stopredis": "docker stop redisMDS"
   },
   "author": "brontosaur",
   "license": "ISC",
