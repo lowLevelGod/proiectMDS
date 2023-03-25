@@ -4,3 +4,12 @@ export interface UserInfo {
     username: string,
     email: string,
 }
+
+
+export interface Post {
+    id: string,
+    createdAt: Date,
+    userId: string, 
+    description?: string,
+    picturesURLs: string[],
+}

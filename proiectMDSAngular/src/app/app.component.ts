@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormBuilder } from '@angular/forms';
 import { CookieService } from 'ngx-cookie-service';
-import { UserInfo } from './UserInfo';
+import { Post, UserInfo } from './UserInfo';
 
 @Component({
   selector: 'app-root',
@@ -12,6 +12,7 @@ import { UserInfo } from './UserInfo';
 export class AppComponent {
   title = 'proiectMDSAngular';
 
+  post?: Post;
   userInfo?: UserInfo;
   loginForm = this.formBuilder.group({
     email: '',
@@ -23,13 +24,22 @@ export class AppComponent {
     password: ''
   });
 
+  postForm = this.formBuilder.group({
+    description: undefined,
+    picturesURLs: "",
+  });
+
+  deletePostForm = this.formBuilder.group({
+    id: "",
+  });
+
   constructor(private http: HttpClient, private formBuilder: FormBuilder,
     private cookieService: CookieService) {
 
   }
 
   ngOnInit() {
-    this.http.get<UserInfo>("/api/whoami", {withCredentials: true})
+    this.http.get<UserInfo>("/api/whoami", { withCredentials: true })
       .subscribe((x) => {
         this.userInfo = x;
         this.loginForm.reset();
@@ -45,18 +55,36 @@ export class AppComponent {
       });
   }
 
-  onSignUp(): void{
-    this.http.post<UserInfo>("/api/signup", this.signupForm.value, {withCredentials: true})
-    .subscribe((x) => {
+  onSignUp(): void {
+    this.http.post<UserInfo>("/api/signup", this.signupForm.value, { withCredentials: true })
+      .subscribe((x) => {
         console.log(x);
         this.ngOnInit();
-    });
+      });
   }
 
-  onLogOut() : void {
-    this.http.get("/api/logout", {responseType: "text", withCredentials: true})
+  onLogOut(): void {
+    this.http.get("/api/logout", { responseType: "text", withCredentials: true })
       .subscribe((x) => {
-        
+        this.ngOnInit();
+      });
+  }
+
+  onCreatePost(): void {
+    this.http.post<Post>("/api/posts", this.postForm.value, { withCredentials: true })
+      .subscribe((x) => {
+        console.log(x);
+        this.post = x;
+        this.ngOnInit();
+      });
+  }
+
+  onDeletePost() : void{
+    let url: string = "/api/posts/" + this.deletePostForm.value.id;
+    this.http.delete(url, { withCredentials: true })
+      .subscribe((x) => {
+        console.log(x);
+        this.post = undefined;
         this.ngOnInit();
       });
   }

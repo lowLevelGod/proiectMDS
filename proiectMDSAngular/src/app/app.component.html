@@ -42,3 +42,48 @@
   <button class="button" type="submit">Sign up</button>
 
 </form>
+
+<form [formGroup]="postForm" (ngSubmit)="onCreatePost()">
+
+  <div>
+    <label for="description">
+      Description
+    </label>
+    <input id="description" type="text" formControlName="description">
+  </div>
+
+  <div>
+    <label for="picturesURLs">
+      Pictures
+    </label>
+    <input id="picturesURLs" type="text" formControlName="picturesURLs">
+  </div>
+
+  <button class="button" type="submit">Create post</button>
+
+</form>
+
+<h1 *ngIf="userInfo">
+  Post !!!
+</h1>
+
+<p *ngIf="post">
+  {{post.id}}
+</p>
+
+<p *ngIf="post">
+  {{post.userId}}
+</p>
+
+<form [formGroup]="deletePostForm" (ngSubmit)="onDeletePost()">
+
+  <div>
+    <label for="id">
+      Post id
+    </label>
+    <input id="id" type="text" formControlName="id">
+  </div>
+
+  <button class="button" type="submit">Delete post</button>
+
+</form>

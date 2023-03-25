@@ -208,6 +208,70 @@ app.get('/logout', function (req, res, next) {
         res.send('ok');
     });
 });
+app.post('/posts', isAuthenticated, function (req, res, next) {
+    let id = (0, uuid_1.v4)();
+    let picturesURLs = ['test.jpeg'];
+    let createdAt = new Date();
+    let userId = req.session.user.id;
+    let description = req.body.description;
+    let post = {
+        id,
+        createdAt,
+        userId,
+        description,
+        picturesURLs,
+    };
+    knexInstance('Posts')
+        .insert(post)
+        .then(x => res.send(post))
+        .catch(err => {
+        console.error(err.message);
+        res.send(undefined);
+    });
+});
+function getPostOwner(id) {
+    return knexInstance
+        .select('userId')
+        .from('Posts')
+        .where('id', id)
+        .then(x => {
+        if (x.length === 0)
+            return undefined;
+        return x[0].userId;
+    })
+        .catch(err => {
+        console.error(err.message);
+        return undefined;
+    });
+}
+app.delete('/posts/:id', isAuthenticated, function (req, res, next) {
+    console.log('hello');
+    getPostOwner(req.params.id)
+        .then(userId => {
+        if (userId === req.session.user.id) {
+            knexInstance
+                .from('Posts')
+                .where('id', req.params.id)
+                .del()
+                .then(x => {
+                if (x)
+                    return res.sendStatus(200);
+                return res.sendStatus(404);
+            })
+                .catch(err => {
+                console.error(err.message);
+                return res.sendStatus(404);
+            });
+        }
+        else {
+            return res.sendStatus(404);
+        }
+    })
+        .catch(err => {
+        console.error(err.message);
+        return res.sendStatus(404);
+    });
+});
 const httpsServer = https_1.default.createServer(options, app);
 httpsServer.listen(port, () => {
     console.log(`Server listening on port ${port}`);
