@@ -1,11 +1,11 @@
 #!/bin/bash
 
-NODE="node node_modules/nodemon/bin/nodemon.js app.js";
+NODE='tsc|app.js';
 ANGULAR="ng serve";
 REDIS=redisMDS;
 POSTGRES=postgresMDS;
 
-kill $(ps aux | grep "$NODE" | awk '{print $2}') > /dev/null 2>&1;
+kill $(ps aux | grep -E "$NODE" | awk '{print $2}') > /dev/null 2>&1;
 
 echo "Closed node server";
 

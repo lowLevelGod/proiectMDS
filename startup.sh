@@ -30,4 +30,4 @@ docker start $POSTGRES > /dev/null;
 echo "Running node server..."
 
 npm run dev > /dev/null 2>&1 >> $NODELOG &
-cd $ANGULAR && nohup ng serve > /dev/null 2>&1 >> $NGLOG;
+cd $ANGULAR && nohup ng serve > $NGLOG 2>&1 >> $NGLOG;

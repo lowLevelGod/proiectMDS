@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { FormBuilder } from '@angular/forms';
 import { CookieService } from 'ngx-cookie-service';
+import { UserInfo } from './UserInfo';
 
 @Component({
   selector: 'app-root',
@@ -11,9 +12,13 @@ import { CookieService } from 'ngx-cookie-service';
 export class AppComponent {
   title = 'proiectMDSAngular';
 
-  sessionID?: string;
-  isLoggedIn = false;
+  userInfo?: UserInfo;
   loginForm = this.formBuilder.group({
+    email: '',
+    password: ''
+  });
+
+  signupForm = this.formBuilder.group({
     email: '',
     password: ''
   });
@@ -24,17 +29,9 @@ export class AppComponent {
   }
 
   ngOnInit() {
-    this.http.get("/api/whoami", {responseType: "text", withCredentials: true})
+    this.http.get<UserInfo>("/api/whoami", {withCredentials: true})
       .subscribe((x) => {
-        if (x === "false")
-        {
-          this.isLoggedIn = false;
-        }
-        else 
-        {
-          this.isLoggedIn = true;
-          this.sessionID = "session id here!";
-        }
+        this.userInfo = x;
         this.loginForm.reset();
       });
   }
@@ -43,9 +40,17 @@ export class AppComponent {
 
     this.http.post("/api/login", this.loginForm.value, { responseType: "text", withCredentials: true })
       .subscribe((x) => {
-        this.sessionID = x;
+        console.log(x);
         this.ngOnInit();
       });
+  }
+
+  onSignUp(): void{
+    this.http.post<UserInfo>("/api/signup", this.signupForm.value, {withCredentials: true})
+    .subscribe((x) => {
+        console.log(x);
+        this.ngOnInit();
+    });
   }
 
   onLogOut() : void {

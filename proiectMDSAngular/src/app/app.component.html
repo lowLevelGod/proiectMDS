@@ -1,24 +1,44 @@
-<form *ngIf="!isLoggedIn" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+<form *ngIf="!userInfo" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
 
-    <div>
-        <label for="email">
-          Email
-        </label>
-        <input id="email" type="text" formControlName="email">
-      </div>
-    
-      <div>
-        <label for="password">
-          Password
-        </label>
-        <input id="password" type="text" formControlName="password">
-      </div>
+  <div>
+    <label for="email">
+      Email
+    </label>
+    <input id="email" type="text" formControlName="email">
+  </div>
 
-    <button class="button" type="submit">Login</button>
-  
+  <div>
+    <label for="password">
+      Password
+    </label>
+    <input id="password" type="text" formControlName="password">
+  </div>
+
+  <button class="button" type="submit">Login</button>
+
 </form>
 
-<h1 *ngIf="isLoggedIn">
-  {{sessionID}}
-  <button (click) = "onLogOut()"> LogOut </button>
+<h1 *ngIf="userInfo">
+    {{userInfo.id}}
+  <button (click)="onLogOut()"> LogOut </button>
 </h1>
+
+<form [formGroup]="signupForm" (ngSubmit)="onSignUp()">
+
+  <div>
+    <label for="email">
+      Email
+    </label>
+    <input id="email" type="text" formControlName="email">
+  </div>
+
+  <div>
+    <label for="password">
+      Password
+    </label>
+    <input id="password" type="text" formControlName="password">
+  </div>
+
+  <button class="button" type="submit">Sign up</button>
+
+</form>
