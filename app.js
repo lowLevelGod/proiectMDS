@@ -15,6 +15,18 @@ const https_1 = __importDefault(require("https"));
 const fs_1 = __importDefault(require("fs"));
 const app = (0, express_1.default)();
 const port = 8080;
+const errorCodes = Object.freeze({
+    other: 1,
+    emailTaken: 2,
+    notLoggedIn: 3,
+});
+function craftError(errorCode, errorMsg) {
+    return {
+        errorCode,
+        errorMsg,
+    };
+}
+// database connection
 const knexConfig = {
     client: 'postgres',
     connection: {
@@ -26,16 +38,19 @@ const knexConfig = {
     },
 };
 const knexInstance = (0, knex_1.knex)(knexConfig);
+// https certificate
 const options = {
     key: fs_1.default.readFileSync(`certificate/client-key.pem`),
     cert: fs_1.default.readFileSync(`certificate/client-cert.pem`)
 };
+// redis connection for session storage
 let redisClient = (0, redis_1.createClient)();
 redisClient.connect().catch(console.error);
 let redisStore = new connect_redis_1.default({
     client: redisClient,
     prefix: "proiectmds:",
 });
+// cookie options
 app.use((0, express_session_1.default)({
     name: "dinoSnack",
     store: redisStore,
@@ -58,11 +73,13 @@ app.use(express_1.default.json());
 app.get('/', (req, res) => {
     res.send("Hello world!");
 });
+// for database storage
 function hashPassword(password) {
     const saltRounds = 10;
     return bcrypt_1.default
         .hash(password, saltRounds);
 }
+// cannot have 2 users with same email
 function isEmailUnique(email) {
     return knexInstance
         .column('email')
@@ -96,27 +113,40 @@ app.post('/signup', (req, res, next) => {
                         email: user.email,
                     };
                     req.session.regenerate(function (err) {
-                        if (err)
-                            next(err);
+                        if (err) {
+                            const error = craftError(errorCodes.other, "Please try signing up again!");
+                            return res.status(500).json({ error, content: undefined });
+                        }
                         // store user information in session, typically a user id
                         req.session.user = sessionUser;
                         // save the session before redirection to ensure page
                         // load does not happen before session is saved
                         req.session.save(function (err) {
-                            if (err)
-                                return next(err);
-                            res.send(sessionUser);
+                            if (err) {
+                                const error = craftError(errorCodes.other, "Please try signing up again!");
+                                return res.status(500).json({ error, content: undefined });
+                            }
+                            return res.status(200).json({ error: undefined, content: sessionUser });
                         });
                     });
                 })
-                    .catch(err => console.log(err.message));
+                    .catch(err => {
+                    console.log(err.message);
+                    const error = craftError(errorCodes.other, "Please try signing up again!");
+                    return res.status(500).json({ error, content: undefined });
+                });
             }
             else {
-                res.send(undefined);
+                const error = craftError(errorCodes.emailTaken, "Email is already taken!");
+                return res.status(409).json({ error, content: undefined });
             }
         });
     })
-        .catch(err => console.log(err.message));
+        .catch(err => {
+        console.log(err.message);
+        const error = craftError(errorCodes.other, "Please try signing up again!");
+        return res.status(500).json({ error, content: undefined });
+    });
 });
 function validateUser(password, storedHash) {
     return bcrypt_1.default
@@ -161,39 +191,42 @@ app.post('/login', (req, res, next) => {
             })
                 .then(sessionUser => {
                 req.session.regenerate(function (err) {
-                    if (err)
-                        next(err);
+                    if (err) {
+                        const error = craftError(errorCodes.other, "Please try logging in again!");
+                        return res.status(500).json({ error, content: undefined });
+                    }
                     // store user information in session, typically a user id
                     req.session.user = sessionUser;
-                    // save the session before redirection to ensure page
-                    // load does not happen before session is saved
-                    req.session.save(function (err) {
-                        if (err)
-                            return next(err);
-                        res.send(sessionUser);
-                    });
+                    return res.status(200).json({ error: undefined, content: sessionUser });
                 });
             })
                 .catch(err => {
                 console.error(err.message);
+                const error = craftError(errorCodes.other, "Please try logging in again!");
+                return res.status(500).json({ error, content: undefined });
             });
         }
         else {
-            res.send(undefined);
+            const error = craftError(errorCodes.other, "Email or password wrong!");
+            return res.status(403).json({ error, content: undefined });
         }
     })
         .catch(err => {
         console.error(err.message);
+        const error = craftError(errorCodes.other, "Email or password wrong!");
+        return res.status(403).json({ error, content: undefined });
     });
 });
 function isAuthenticated(req, res, next) {
     if (req.session.user)
         next();
-    else
-        next('route');
+    else {
+        const error = craftError(errorCodes.notLoggedIn, "Please log in first!");
+        return res.status(403).json({ error, content: undefined });
+    }
 }
-app.get('/whoami', (req, res) => {
-    res.send(req.session.user);
+app.get('/whoami', isAuthenticated, (req, res) => {
+    return res.status(200).json({ error: undefined, content: req.session.user });
 });
 app.get('/logout', function (req, res, next) {
     // logout logic
@@ -202,10 +235,11 @@ app.get('/logout', function (req, res, next) {
     // does not have a logged in user
     req.session.user = undefined;
     req.session.destroy(function (err) {
-        if (err)
-            next(err);
-        res.clearCookie('dinoSnack');
-        res.send('ok');
+        if (err) {
+            const error = craftError(errorCodes.other, "Log out failed!");
+            return res.status(500).json({ error, content: undefined });
+        }
+        return res.clearCookie('dinoSnack').status(200).json({ error: undefined, content: undefined });
     });
 });
 app.post('/posts', isAuthenticated, function (req, res, next) {
