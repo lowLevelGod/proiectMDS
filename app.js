@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const multer_1 = __importDefault(require("multer"));
 const connect_redis_1 = __importDefault(require("connect-redis"));
 const express_session_1 = __importDefault(require("express-session"));
 const redis_1 = require("redis");
@@ -13,8 +14,18 @@ const uuid_1 = require("uuid");
 const cors_1 = __importDefault(require("cors"));
 const https_1 = __importDefault(require("https"));
 const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 const app = (0, express_1.default)();
 const port = 8080;
+const multerStorage = multer_1.default.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'resources/pictures/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, (0, uuid_1.v4)() + "." + path_1.default.extname(file.originalname));
+    }
+});
+const uploadPicture = (0, multer_1.default)({ dest: 'resources/pictures/', storage: multerStorage });
 const errorCodes = Object.freeze({
     other: 1,
     emailTaken: 2,
@@ -92,6 +103,7 @@ function isEmailUnique(email) {
         return false;
     });
 }
+// returns JSON {error, content} and sets http status code
 app.post('/signup', (req, res, next) => {
     hashPassword(req.body.password)
         .then(passwordHash => {
@@ -172,6 +184,7 @@ function getUserPassword(email) {
         return undefined;
     });
 }
+// returns JSON {error, content} and sets http status code
 app.post('/login', (req, res, next) => {
     getUserPassword(req.body.email)
         .then(hash => validateUser(req.body.password, hash))
@@ -225,9 +238,11 @@ function isAuthenticated(req, res, next) {
         return res.status(403).json({ error, content: undefined });
     }
 }
+// returns JSON {error, content} and sets http status code
 app.get('/whoami', isAuthenticated, (req, res) => {
     return res.status(200).json({ error: undefined, content: req.session.user });
 });
+// returns JSON {error, content} and sets http status code
 app.get('/logout', function (req, res, next) {
     // logout logic
     // clear the user from the session object and save.
@@ -242,7 +257,8 @@ app.get('/logout', function (req, res, next) {
         return res.clearCookie('dinoSnack').status(200).json({ error: undefined, content: undefined });
     });
 });
-app.post('/posts', isAuthenticated, function (req, res, next) {
+app.post('/posts', isAuthenticated, uploadPicture.array('pictures', 10), function (req, res, next) {
+    console.log(req.files);
     let id = (0, uuid_1.v4)();
     let picturesURLs = ['test.jpeg'];
     let createdAt = new Date();

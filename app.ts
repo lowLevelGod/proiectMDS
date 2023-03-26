@@ -1,4 +1,5 @@
 import express, { Express, Request, Response, RequestHandler, NextFunction } from 'express';
+import multer, { Multer } from 'multer';
 
 import RedisStore from "connect-redis";
 import session from "express-session";
@@ -11,9 +12,27 @@ import { v4 as uuidv4 } from 'uuid';
 import cors from 'cors';
 import https from 'https';
 import fs from 'fs';
+import path from 'path';
 
 const app: Express = express();
 const port: number = 8080;
+
+const multerStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(
+            null,
+            'resources/pictures/'
+        );
+    },
+
+    filename: (req: Request, file, cb) => {
+        cb(
+            null,
+            uuidv4() + "." + path.extname(file.originalname)
+        );
+    }
+});
+const uploadPicture : Multer = multer({ dest: 'resources/pictures/' , storage: multerStorage});
 
 const errorCodes = Object.freeze({
     other: 1,
@@ -132,6 +151,7 @@ function isEmailUnique(email: string): Promise<boolean> {
         });
 }
 
+// returns JSON {error, content} and sets http status code
 app.post('/signup', (req: Request, res: Response, next: NextFunction) => {
 
     hashPassword(req.body.password)
@@ -222,6 +242,7 @@ function getUserPassword(email: string): Promise<string> {
 
 }
 
+// returns JSON {error, content} and sets http status code
 app.post('/login', (req: Request, res: Response, next: NextFunction) => {
 
     getUserPassword(req.body.email)
@@ -281,10 +302,12 @@ function isAuthenticated(req: Request, res: Response, next: NextFunction) {
     }
 }
 
+// returns JSON {error, content} and sets http status code
 app.get('/whoami', isAuthenticated, (req: Request, res: Response) => {
     return res.status(200).json({error: undefined, content: req.session.user});
 });
 
+// returns JSON {error, content} and sets http status code
 app.get('/logout', function (req, res, next) {
     // logout logic
 
@@ -309,7 +332,8 @@ interface Post {
     picturesURLs: string[],
 }
 
-app.post('/posts', isAuthenticated, function (req: Request, res: Response, next: NextFunction) {
+app.post('/posts', isAuthenticated, uploadPicture.array('pictures', 10), function (req: Request, res: Response, next: NextFunction) {
+    console.log(req.files);
     let id = uuidv4();
     let picturesURLs = ['test.jpeg'];
     let createdAt = new Date();
