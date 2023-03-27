@@ -15,12 +15,16 @@ const cors_1 = __importDefault(require("cors"));
 const https_1 = __importDefault(require("https"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
+const archiver_1 = __importDefault(require("archiver"));
 const app = (0, express_1.default)();
 const port = 8080;
+function craftPictureDest(userId) {
+    return path_1.default.join('resources/users/', userId, 'pictures/');
+}
 const multerStorage = multer_1.default.diskStorage({
     destination: (req, file, cb) => {
         // resources/users/{userID}/pictures/{pictureID}.extension
-        let dir = path_1.default.join('resources/users/', req.session.user.id, 'pictures/');
+        let dir = craftPictureDest(req.session.user.id);
         fs_1.default.mkdir(dir, { recursive: true }, (err) => {
             if (err) {
                 throw err;
@@ -33,13 +37,15 @@ const multerStorage = multer_1.default.diskStorage({
     }
 });
 // middleware for uploading files
-const uploadPicture = (0, multer_1.default)({ storage: multerStorage });
+const uploadFiles = (0, multer_1.default)({ storage: multerStorage });
 // send this to identify error
 const errorCodes = Object.freeze({
     other: 1,
     emailTaken: 2,
     notLoggedIn: 3,
     failedToUpload: 4,
+    unAuthorized: 5,
+    notFound: 6,
 });
 function craftError(errorCode, errorMsg) {
     return {
@@ -269,10 +275,48 @@ app.get('/logout', function (req, res, next) {
         return res.clearCookie('dinoSnack').status(200).json({ error: undefined, content: undefined });
     });
 });
-app.post('/posts', isAuthenticated, uploadPicture.array('pictures', 10), function (req, res, next) {
-    console.log(req.files);
+function uploadMedia(req, res, next) {
+    const upload = uploadFiles.array('media', 10);
+    upload(req, res, function (err) {
+        if (err instanceof multer_1.default.MulterError) {
+            if (err.message === 'Unexpected field') {
+                const error = craftError(errorCodes.failedToUpload, "Too many files!");
+                return res.status(400).json({ error, content: undefined });
+            }
+            // A Multer error occurred when uploading.
+            const error = craftError(errorCodes.failedToUpload, "Please try uploading again!");
+            return res.status(500).json({ error, content: undefined });
+        }
+        else if (err) {
+            // An unknown error occurred when uploading.
+            const error = craftError(errorCodes.failedToUpload, "Please try uploading again!");
+            return res.status(500).json({ error, content: undefined });
+        }
+        // Everything went fine. 
+        return next();
+    });
+}
+function getPostMetaData(post) {
+    let postMetaData = {
+        id: post.id,
+        createdAt: post.createdAt,
+        userId: post.userId,
+        description: post.description,
+    };
+    return postMetaData;
+}
+app.post('/posts', isAuthenticated, uploadMedia, function (req, res, next) {
+    if (!req.files) {
+        const error = craftError(errorCodes.failedToUpload, "Please try uploading again!");
+        return res.status(500).json({ error, content: undefined });
+    }
+    if (req.files.length === 0) {
+        const error = craftError(errorCodes.failedToUpload, "At least one file required!");
+        return res.status(400).json({ error, content: undefined });
+    }
     let id = (0, uuid_1.v4)();
-    let picturesURLs = ['test.jpeg'];
+    const files = req.files;
+    let picturesURLs = files === null || files === void 0 ? void 0 : files.map((file) => file.filename);
     let createdAt = new Date();
     let userId = req.session.user.id;
     let description = req.body.description;
@@ -285,53 +329,244 @@ app.post('/posts', isAuthenticated, uploadPicture.array('pictures', 10), functio
     };
     knexInstance('Posts')
         .insert(post)
-        .then(x => res.send(post))
+        .then(x => {
+        // we don't want to send file paths to client
+        let postMetaData = getPostMetaData(post);
+        return res.status(200).json({ error: undefined, content: postMetaData });
+    })
         .catch(err => {
         console.error(err.message);
-        res.send(undefined);
+        const error = craftError(errorCodes.failedToUpload, "Please try uploading again!");
+        return res.status(500).json({ error, content: undefined });
     });
 });
 function getPostOwner(id) {
     return knexInstance
-        .select('userId')
+        .select('userId', 'picturesURLs')
         .from('Posts')
         .where('id', id)
         .then(x => {
         if (x.length === 0)
             return undefined;
-        return x[0].userId;
+        const res = {
+            userId: x[0].userId,
+            picturesURLs: x[0].picturesURLs
+        };
+        return res;
     })
         .catch(err => {
         console.error(err.message);
         return undefined;
     });
 }
+function deleteFiles(files, callback) {
+    var i = files.length;
+    files.forEach(function (filepath) {
+        fs_1.default.unlink(filepath, function (err) {
+            i--;
+            if (err) {
+                callback(err);
+                return;
+            }
+            else if (i <= 0) {
+                callback(null);
+            }
+        });
+    });
+}
 app.delete('/posts/:id', isAuthenticated, function (req, res, next) {
-    console.log('hello');
     getPostOwner(req.params.id)
-        .then(userId => {
+        .then(data => {
+        if (!data) {
+            const error = craftError(errorCodes.notFound, "Post not found!");
+            return res.status(404).json({ error, content: undefined });
+        }
+        const userId = data.userId;
         if (userId === req.session.user.id) {
             knexInstance
                 .from('Posts')
                 .where('id', req.params.id)
                 .del()
                 .then(x => {
-                if (x)
-                    return res.sendStatus(200);
-                return res.sendStatus(404);
+                // create absolute paths from file names
+                const paths = data.picturesURLs.map((file) => path_1.default.join(craftPictureDest(userId), file));
+                deleteFiles(paths, function (err) {
+                    if (err) {
+                        console.error(err.message);
+                    }
+                    return res.status(200).json({ error: undefined, content: undefined });
+                });
             })
                 .catch(err => {
                 console.error(err.message);
-                return res.sendStatus(404);
+                const error = craftError(errorCodes.other, "Please try deleting again!");
+                return res.status(500).json({ error, content: undefined });
             });
         }
         else {
-            return res.sendStatus(404);
+            const error = craftError(errorCodes.unAuthorized, "You are not authorized!");
+            return res.status(403).json({ error, content: undefined });
         }
     })
         .catch(err => {
         console.error(err.message);
-        return res.sendStatus(404);
+        const error = craftError(errorCodes.other, "Please try deleting again!");
+        return res.status(500).json({ error, content: undefined });
+    });
+});
+// metadata for single post
+app.get('/posts/:id', isAuthenticated, function (req, res, next) {
+    knexInstance
+        .select('*')
+        .from('Posts')
+        .where('id', req.params.id)
+        .then(arr => {
+        if (arr.length === 0) {
+            const error = craftError(errorCodes.notFound, "Post not found!");
+            return res.status(404).json({ error, content: undefined });
+        }
+        return res.status(200).json({ error: undefined, content: getPostMetaData(arr[0]) });
+    })
+        .catch(err => {
+        console.error(err.message);
+        const error = craftError(errorCodes.other, "Please try again!");
+        return res.status(500).json({ error, content: undefined });
+    });
+});
+// metadata for all posts made by user
+app.get('/posts', function (req, res, next) {
+    const userId = req.query['userid'];
+    knexInstance
+        .select('*')
+        .from('Posts')
+        .where('userId', userId)
+        .then(arr => {
+        if (arr.length === 0) {
+            const error = craftError(errorCodes.notFound, "No post found for this user!");
+            return res.status(404).json({ error, content: undefined });
+        }
+        const metaArr = arr.map(p => getPostMetaData(p));
+        return res.status(200).json({ error: undefined, content: metaArr });
+    })
+        .catch(err => {
+        console.error(err.message);
+        const error = craftError(errorCodes.other, "Please try again!");
+        return res.status(500).json({ error, content: undefined });
+    });
+});
+function moveFiles(dir, files, callback) {
+    var i = files.length;
+    files.forEach(function (filepath) {
+        fs_1.default.copyFile(filepath, path_1.default.join(dir, path_1.default.basename(filepath)), function (err) {
+            i--;
+            if (err) {
+                callback(err);
+                return;
+            }
+            else if (i <= 0) {
+                callback(null);
+            }
+        });
+    });
+}
+function zipDirectory(sourceDir, outPath) {
+    const archive = (0, archiver_1.default)('zip', { zlib: { level: 9 } });
+    const stream = fs_1.default.createWriteStream(outPath, { flags: 'w' });
+    return new Promise((resolve, reject) => {
+        archive
+            .directory(sourceDir, false)
+            .on('error', (err) => reject(err))
+            .pipe(stream);
+        stream.on('close', () => resolve(undefined));
+        archive.finalize();
+    });
+}
+// sends zip with media present in given post
+app.get('/posts/:id/media', function (req, res, next) {
+    knexInstance
+        .select('userId', 'picturesURLs')
+        .from('Posts')
+        .where('id', req.params.id)
+        .then(arr => {
+        if (arr.length === 0) {
+            const error = craftError(errorCodes.notFound, "Post not found!");
+            return res.status(404).json({ error, content: undefined });
+        }
+        const paths = arr[0].picturesURLs.map((file) => path_1.default.join(craftPictureDest(arr[0].userId), file));
+        let dir = path_1.default.join('resources/', (0, uuid_1.v4)());
+        fs_1.default.mkdir(dir, { recursive: true }, (err) => {
+            if (err) {
+                console.error(err.message);
+                const error = craftError(errorCodes.other, "Please try again!");
+                return res.status(500).json({ error, content: undefined });
+            }
+            // move files to temporary directory to be zipped
+            moveFiles(dir, paths, function (err) {
+                if (err) {
+                    const error = craftError(errorCodes.other, "Please try again!");
+                    return res.status(500).json({ error, content: undefined });
+                }
+                let zipDir = path_1.default.join('resources/zip', (0, uuid_1.v4)());
+                fs_1.default.mkdir(zipDir, { recursive: true }, (err) => {
+                    if (err) {
+                        console.error(err.message);
+                        const error = craftError(errorCodes.other, "Please try again!");
+                        return res.status(500).json({ error, content: undefined });
+                    }
+                    let zipPath = path_1.default.join(zipDir, (0, uuid_1.v4)());
+                    zipDirectory(dir, zipPath)
+                        .then(() => {
+                        res.set('content-type', 'application/zip');
+                        return res.status(200).sendFile(path_1.default.join(__dirname, zipPath), function (err) {
+                            // cleanup temporary directories
+                            fs_1.default.rm(dir, { recursive: true }, function (err) {
+                                if (err)
+                                    console.log(err.message);
+                                fs_1.default.rm(zipDir, { recursive: true }, function (err) {
+                                    if (err)
+                                        console.log(err.message);
+                                });
+                            });
+                        });
+                    })
+                        .catch(err => {
+                        console.error(err.message);
+                        const error = craftError(errorCodes.other, "Please try again!");
+                        return res.status(500).json({ error, content: undefined });
+                    });
+                });
+            });
+        });
+    })
+        .catch(err => {
+        console.error(err.message);
+        const error = craftError(errorCodes.other, "Please try again!");
+        return res.status(500).json({ error, content: undefined });
+    });
+});
+app.patch('/posts/:id', isAuthenticated, function (req, res, next) {
+    const post = {
+        description: req.body.description,
+    };
+    const query = knexInstance('Posts')
+        .where('id', req.params.id)
+        .andWhere('userId', req.session.user.id);
+    if (post.description) {
+        query.update({ description: post.description }, "*");
+    }
+    query
+        .then(arr => {
+        if (arr.length === 0) {
+            const error = craftError(errorCodes.notFound, "Post not found or not authorized!");
+            return res.status(404).json({ error, content: undefined });
+        }
+        const metadataPost = getPostMetaData(arr[0]);
+        return res.status(200).json({ error: undefined, content: metadataPost });
+    })
+        .catch(err => {
+        console.error(err.message);
+        const error = craftError(errorCodes.other, "Please try again!");
+        return res.status(500).json({ error, content: undefined });
     });
 });
 const httpsServer = https_1.default.createServer(options, app);
