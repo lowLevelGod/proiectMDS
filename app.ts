@@ -18,26 +18,37 @@ const app: Express = express();
 const port: number = 8080;
 
 const multerStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(
-            null,
-            'resources/pictures/'
-        );
+    destination: (req : Request, file, cb) => {
+        // resources/users/{userID}/pictures/{pictureID}.extension
+        let dir = path.join('resources/users/', req.session.user!.id, 'pictures/');
+        fs.mkdir(dir, {recursive: true}, (err) => {
+            if (err) {
+                throw err;
+            }
+            cb(
+                null,
+                dir
+            );
+        });
     },
 
     filename: (req: Request, file, cb) => {
         cb(
             null,
-            uuidv4() + "." + path.extname(file.originalname)
+            uuidv4() + path.extname(file.originalname)
         );
     }
 });
-const uploadPicture : Multer = multer({ dest: 'resources/pictures/' , storage: multerStorage});
 
+// middleware for uploading files
+const uploadPicture : Multer = multer({ storage: multerStorage});
+
+// send this to identify error
 const errorCodes = Object.freeze({
     other: 1,
     emailTaken: 2,
     notLoggedIn: 3,
+    failedToUpload: 4,
 });
 
 interface Error {
@@ -64,6 +75,8 @@ const knexConfig: Knex.Config = {
     },
 };
 
+// SQL query builder
+// use it to query POSTGRES database
 const knexInstance: Knex = knex(knexConfig);
 
 // user information to be used on client

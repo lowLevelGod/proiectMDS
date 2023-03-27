@@ -19,17 +19,27 @@ const app = (0, express_1.default)();
 const port = 8080;
 const multerStorage = multer_1.default.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'resources/pictures/');
+        // resources/users/{userID}/pictures/{pictureID}.extension
+        let dir = path_1.default.join('resources/users/', req.session.user.id, 'pictures/');
+        fs_1.default.mkdir(dir, { recursive: true }, (err) => {
+            if (err) {
+                throw err;
+            }
+            cb(null, dir);
+        });
     },
     filename: (req, file, cb) => {
-        cb(null, (0, uuid_1.v4)() + "." + path_1.default.extname(file.originalname));
+        cb(null, (0, uuid_1.v4)() + path_1.default.extname(file.originalname));
     }
 });
-const uploadPicture = (0, multer_1.default)({ dest: 'resources/pictures/', storage: multerStorage });
+// middleware for uploading files
+const uploadPicture = (0, multer_1.default)({ storage: multerStorage });
+// send this to identify error
 const errorCodes = Object.freeze({
     other: 1,
     emailTaken: 2,
     notLoggedIn: 3,
+    failedToUpload: 4,
 });
 function craftError(errorCode, errorMsg) {
     return {
@@ -48,6 +58,8 @@ const knexConfig = {
         database: 'dbMDS'
     },
 };
+// SQL query builder
+// use it to query POSTGRES database
 const knexInstance = (0, knex_1.knex)(knexConfig);
 // https certificate
 const options = {
