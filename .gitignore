@@ -150,4 +150,5 @@ testem.log
 Thumbs.db
 
 resources/
+.vscode/
 

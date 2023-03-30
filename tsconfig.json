@@ -107,6 +107,9 @@
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
   "include": [
-    "app.ts"
+    "app/app.ts",
+    "app/controllers/*.ts",
+    "app/routes/*.ts",
+    "app/utils/*.ts",
   ],
 }
