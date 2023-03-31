@@ -208,7 +208,7 @@ export class PostController {
                             zipDirectory(dir, zipPath)
                                 .then(() => {
                                     res.set('content-type', 'application/zip');
-                                    return res.status(200).sendFile(path.join(__dirname, zipPath), function (err) {
+                                    return res.status(200).sendFile(path.join(__dirname, "../", "../", zipPath), function (err) {
 
                                         // cleanup temporary directories
                                         fs.rm(dir, { recursive: true }, function (err) {
