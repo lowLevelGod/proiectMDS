@@ -7,7 +7,7 @@
     "test": "node node_modules/nodemon/bin/nodemon.js app.js",
     "startredis": "docker run -p 6379:6379 --name redisMDS -it redis/redis-stack-server:latest",
     "stopredis": "docker stop redisMDS",
-    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q app/app.js\""
+    "dev": "concurrently \"npx tsc --watch\" \"nodemon -q tsOutput/app.js\""
   },
   "author": "brontosaur",
   "license": "ISC",

@@ -9,6 +9,7 @@ import session from "express-session";
 import express, { Express, Request, Response, RequestHandler, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { craftError, errorCodes } from './error';
+import { CommentsController } from '../controllers/CommentsController';
 
 // database connection
 const knexConfig: Knex.Config = {
@@ -62,6 +63,15 @@ export interface Post {
     userId: string,
     description?: string,
     picturesURLs: string[],
+}
+
+export interface Comment{
+    id: string,
+    createdAt: Date, 
+    userId: string,
+    postId: string,
+    content: string,
+    parentId?: string,
 }
 
 const multerStorage = multer.diskStorage({
@@ -165,5 +175,6 @@ export function uploadMedia(req: Request, res: Response, next: NextFunction) {
 
 export const authenticationController: AuthenticationController = new AuthenticationController();
 export const postController: PostController = new PostController();
+export const commentController: CommentsController = new CommentsController();
 
 

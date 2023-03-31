@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NODE='tsc|app/app.js';
+NODE='tsc|tsOutput/app.js';
 ANGULAR="ng serve";
 REDIS=redisMDS;
 POSTGRES=postgresMDS;

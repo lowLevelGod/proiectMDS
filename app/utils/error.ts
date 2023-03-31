@@ -5,6 +5,7 @@ export const errorCodes = Object.freeze({
     failedToUpload: 4,
     unAuthorized: 5,
     notFound: 6,
+    noContent: 7,
 });
 
 export interface Error {
