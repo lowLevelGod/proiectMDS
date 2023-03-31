@@ -153,3 +153,4 @@ resources/
 .vscode/
 
 proiectMDSAngular/
+tsOutput/
