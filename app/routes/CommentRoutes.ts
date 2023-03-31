@@ -4,3 +4,6 @@ import { authenticationController, commentController } from "../utils/globals";
 export const commentRouter = express.Router();
 
 commentRouter.post('/comments', authenticationController.isAuthenticated, commentController.create);
+commentRouter.get('/comments/:id', commentController.get);
+commentRouter.get('/comments/:id/replies', commentController.getChildren);
+commentRouter.get('/posts/:postId/comments', commentController.getChildren);

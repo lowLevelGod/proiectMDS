@@ -70,4 +70,61 @@ export class CommentsController{
             return res.status(500).json({ error, content: undefined });
         });
     }
+
+    get(req: Request, res: Response, next: NextFunction){
+
+        getComment(req.params.id)
+        .then((comment: Comment) => {
+            if (!comment){
+                const error = craftError(errorCodes.notFound, "Comment not found!");
+                return res.status(404).json({ error, content: undefined });
+            }
+
+            return res.status(200).json({ error: undefined, content: comment });
+        })
+        .catch(err => {
+            console.error(err.message);
+            const error = craftError(errorCodes.other, "Please try again!");
+            return res.status(500).json({ error, content: undefined });
+        });
+    }
+
+    getChildren(req: Request, res: Response, next: NextFunction){
+        
+        let query = knexInstance('Comments').select('*');
+        if (req.params.postId){
+            query
+            .where('postId', req.params.postId)
+            .andWhere('parentId', null)
+            .then((arr: Comment[]) =>{
+                if (arr.length === 0){
+                    const error = craftError(errorCodes.notFound, "No comments found!");
+                    return res.status(404).json({ error, content: undefined });
+                }
+
+                return res.status(200).json({ error: undefined, content: arr });
+            })
+            .catch(err => {
+                console.error(err.message);
+                const error = craftError(errorCodes.other, "Please try again!");
+                return res.status(500).json({ error, content: undefined });
+            });
+        }else{
+            query
+            .where('parentId', req.params.id)
+            .then((arr: Comment[]) =>{
+                if (arr.length === 0){
+                    const error = craftError(errorCodes.notFound, "No replies found!");
+                    return res.status(404).json({ error, content: undefined });
+                }
+
+                return res.status(200).json({ error: undefined, content: arr });
+            })
+            .catch(err => {
+                console.error(err.message);
+                const error = craftError(errorCodes.other, "Please try again!");
+                return res.status(500).json({ error, content: undefined });
+            });
+        }
+    }
 }
