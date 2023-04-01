@@ -173,6 +173,7 @@ export function uploadMedia(req: Request, res: Response, next: NextFunction) {
     })
 }
 
+
 export const authenticationController: AuthenticationController = new AuthenticationController();
 export const postController: PostController = new PostController();
 export const commentController: CommentsController = new CommentsController();

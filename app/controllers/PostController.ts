@@ -16,27 +16,27 @@ function getPostMetaData(post: Post): Partial<Post> {
     return postMetaData;
 }
 
-export class PostController {
-
-    getPostOwner(id: string): Promise<Partial<Post> | undefined> {
-        return knexInstance
-            .select('userId', 'picturesURLs')
-            .from('Posts')
-            .where('id', id)
-            .then(x => {
-                if (x.length === 0)
-                    return undefined;
-                const res: Partial<Post> = {
-                    userId: x[0].userId,
-                    picturesURLs: x[0].picturesURLs
-                };
-                return res;
-            })
-            .catch(err => {
-                console.error(err.message);
+function getPostOwner(id: string): Promise<Partial<Post> | undefined> {
+    return knexInstance
+        .select('userId', 'picturesURLs')
+        .from('Posts')
+        .where('id', id)
+        .then(x => {
+            if (x.length === 0)
                 return undefined;
-            });
-    }
+            const res: Partial<Post> = {
+                userId: x[0].userId,
+                picturesURLs: x[0].picturesURLs
+            };
+            return res;
+        })
+        .catch(err => {
+            console.error(err.message);
+            return undefined;
+        });
+}
+
+export class PostController {
 
     create(req: Request, res: Response, next: NextFunction) {
         if (!req.files) {
@@ -82,7 +82,7 @@ export class PostController {
     }
 
     delete(req: Request, res: Response, next: NextFunction) {
-        this.getPostOwner(req.params.id)
+        getPostOwner(req.params.id)
             .then(data => {
                 if (!data) {
                     const error = craftError(errorCodes.notFound, "Post not found!");
@@ -238,27 +238,45 @@ export class PostController {
     }
 
     patch(req: Request, res: Response, next: NextFunction) {
-        const post: Partial<Post> = {
-            description: req.body.description,
-        }
 
-        const query = knexInstance('Posts')
-            .where('id', req.params.id)
-            .andWhere('userId', req.session.user!.id);
-
-        if (post.description) {
-            query.update({ description: post.description }, "*");
-        }
-
-        query
-            .then(arr => {
-                if (arr.length === 0) {
-                    const error = craftError(errorCodes.notFound, "Post not found or not authorized!");
+        getPostOwner(req.params.id)
+            .then((data: Partial<Post> | undefined) => {
+                if (!data) {
+                    const error = craftError(errorCodes.notFound, "Post not found!");
                     return res.status(404).json({ error, content: undefined });
                 }
 
-                const metadataPost = getPostMetaData(arr[0]);
-                return res.status(200).json({ error: undefined, content: metadataPost });
+                if (data.userId !== req.session.user!.id) {
+                    const error = craftError(errorCodes.unAuthorized, "You are not authorized!");
+                    return res.status(403).json({ error, content: undefined });
+                }
+                const post: Partial<Post> = {
+                    description: req.body.description,
+                }
+
+                const query = knexInstance('Posts')
+                    .where('id', req.params.id)
+                    .andWhere('userId', req.session.user!.id);
+
+                if (post.description) {
+                    query.update({ description: post.description }, "*");
+                }
+
+                query
+                    .then(arr => {
+                        if (arr.length === 0) {
+                            const error = craftError(errorCodes.notFound, "Post not found!");
+                            return res.status(404).json({ error, content: undefined });
+                        }
+
+                        const metadataPost = getPostMetaData(arr[0]);
+                        return res.status(200).json({ error: undefined, content: metadataPost });
+                    })
+                    .catch(err => {
+                        console.error(err.message);
+                        const error = craftError(errorCodes.other, "Please try again!");
+                        return res.status(500).json({ error, content: undefined });
+                    });
             })
             .catch(err => {
                 console.error(err.message);
