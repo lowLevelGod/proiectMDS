@@ -74,4 +74,71 @@ export class FollowersController{
             }
         });
     }
+
+    accept(req: Request, res: Response, next: NextFunction){
+
+        if (!req.body.userId) {
+            const error = craftError(errorCodes.noContent, "User id cannot be null!");
+            return res.status(403).json({ error, content: undefined });
+        }
+
+        let newFollower: Partial<Follower> = {
+            followedBy : req.body.userId,
+            accepted : req.body.accepted,
+        };
+
+        userExists(newFollower.followedBy!)
+        .then((user: User) => {
+            if (user){
+                return;
+            }
+
+            throw {
+                error: craftError(errorCodes.notFound, "User does not exist!"),
+                content: undefined,
+            }
+        })
+        .then(() => getFollower(req.session.user!.id, req.body.userId))
+        .then((follower: Follower) => {
+            if (!follower){
+                throw {
+                    error: craftError(errorCodes.notFound, "Follow request does not exist!"),
+                    content: undefined,
+                }
+            }
+            console.log(follower);
+            if (follower.follows !== req.session.user!.id){
+                throw {
+                    error: craftError(errorCodes.unAuthorized, "Cannot accept request on behalf of another user!"),
+                    content: undefined,
+                }
+            }
+
+            knexInstance('Followers')
+            .where('follows', follower.follows)
+            .andWhere('followedBy', follower.followedBy)
+            .update('accepted', true, '*')
+            .then((arr) => {
+                if (arr.length === 0){
+                    throw {
+                        error: craftError(errorCodes.other, "Please try again!"),
+                        content: undefined,
+                    }
+                }
+
+                return res.status(200).json(arr[0]);
+            })
+        })
+        .catch(err => {
+            if (!err.error){
+            console.error(err.message);
+            const error = craftError(errorCodes.other, "Please try again!");
+            return res.status(500).json({ error, content: undefined });
+            }else{
+                console.error(err.error.errorMsg);
+                return res.status(404).json(err);
+            }
+        });
+
+    }
 }
