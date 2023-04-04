@@ -6,3 +6,4 @@ export const followerRouter = express.Router();
 followerRouter.post('/follow', authenticationController.isAuthenticated, followerController.request);
 followerRouter.patch('/follow', authenticationController.isAuthenticated, followerController.accept);
 followerRouter.delete('/follow', authenticationController.isAuthenticated, followerController.delete);
+followerRouter.get('/follow', authenticationController.isAuthenticated, followerController.get);
