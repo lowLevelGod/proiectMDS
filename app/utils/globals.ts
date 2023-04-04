@@ -10,6 +10,7 @@ import express, { Express, Request, Response, RequestHandler, NextFunction } fro
 import { v4 as uuidv4 } from 'uuid';
 import { craftError, errorCodes } from './error';
 import { CommentsController } from '../controllers/CommentsController';
+import { FollowersController } from '../controllers/FollowersController';
 
 // database connection
 const knexConfig: Knex.Config = {
@@ -72,6 +73,12 @@ export interface Comment{
     postId: string,
     content: string,
     parentId?: string,
+}
+
+export interface Follower{
+    follows: string,
+    followedBy: string,
+    accepted: boolean,
 }
 
 const multerStorage = multer.diskStorage({
@@ -177,5 +184,5 @@ export function uploadMedia(req: Request, res: Response, next: NextFunction) {
 export const authenticationController: AuthenticationController = new AuthenticationController();
 export const postController: PostController = new PostController();
 export const commentController: CommentsController = new CommentsController();
-
+export const followerController: FollowersController = new FollowersController();
 

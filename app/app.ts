@@ -18,6 +18,7 @@ import archiver from 'archiver';
 import {auth} from './routes/AuthenticationRoutes';
 import { postRouter } from './routes/PostRoutes';
 import { commentRouter } from './routes/CommentRoutes';
+import { followerRouter } from './routes/FollowerRoutes';
 
 const app: Express = express();
 const port: number = 8080;
@@ -67,6 +68,7 @@ app.use(express.json());
 app.use(auth);
 app.use(postRouter);
 app.use(commentRouter);
+app.use(followerRouter);
 
 const httpsServer = https.createServer(options, app);
 httpsServer.listen(port, () => {
