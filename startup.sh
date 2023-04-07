@@ -7,7 +7,7 @@ POSTGRES=postgresMDS;
 POSTGRESPORT=5432;
 REDISPORT=6379;
 ANGULAR=proiectMDSAngular;
-NODELOG=node.log;
+NODELOG=node.log;kz
 NGLOG=ng.log;
 
 docker version;
