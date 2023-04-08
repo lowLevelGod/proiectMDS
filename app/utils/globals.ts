@@ -11,6 +11,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { craftError, errorCodes } from './error';
 import { CommentsController } from '../controllers/CommentsController';
 import { FollowersController } from '../controllers/FollowersController';
+import { PostLikesController } from '../controllers/PostLikesController'; 
+import { CommentLikesController } from '../controllers/CommentLikesController'; 
 
 // database connection
 const knexConfig: Knex.Config = {
@@ -66,6 +68,11 @@ export interface Post {
     picturesURLs: string[],
 }
 
+export interface PostLike {
+    userId: string,
+    postId: string,
+}
+
 export interface Comment{
     id: string,
     createdAt: Date, 
@@ -73,6 +80,11 @@ export interface Comment{
     postId: string,
     content: string,
     parentId?: string,
+}
+
+export interface CommentLike { 
+    userId: string,
+    commentId: string,
 }
 
 export interface Follower{
@@ -185,4 +197,5 @@ export const authenticationController: AuthenticationController = new Authentica
 export const postController: PostController = new PostController();
 export const commentController: CommentsController = new CommentsController();
 export const followerController: FollowersController = new FollowersController();
-
+export const postLikeController: PostLikesController = new PostLikesController();
+export const commentLikeController: CommentLikesController = new CommentLikesController();
