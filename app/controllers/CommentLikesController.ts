@@ -21,7 +21,7 @@ export class CommentLikesController {
             })
     }
 
-    getLikes(req: Request, res: Response, next: NextFunction) {
+    getCommentLikes(req: Request, res: Response, next: NextFunction) {
         const commentId = req.params.commentId;   
 
         if (!commentId || typeof commentId != 'string') {
@@ -52,7 +52,8 @@ export class CommentLikesController {
     }
 
     deleteLike(req: Request, res: Response, next: NextFunction) {
-        const commentLike: CommentLike = {
+    
+        let commentLike: CommentLike = {
             userId: req.session.user!.id,
             commentId: req.params.commentId
         };
