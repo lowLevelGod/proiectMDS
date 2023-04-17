@@ -3,7 +3,7 @@ import { authenticationController, postController, uploadMedia } from '../utils/
 
 export const postRouter = express.Router();
 
-postRouter.post('/posts', authenticationController.isAuthenticated, uploadMedia, postController.create);
+postRouter.post('/posts', authenticationController.isAuthenticated, (req, res, next) => uploadMedia(req, res, next, 'post'), postController.create);
 postRouter.delete('/posts/:id', authenticationController.isAuthenticated, postController.delete);
 postRouter.get('/posts/:id', authenticationController.isAuthenticated, postController.getSinglePost);
 postRouter.get('/posts', postController.getPostsByUser);

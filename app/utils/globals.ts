@@ -38,6 +38,15 @@ export interface User {
     passwordHash: string,
 }
 
+export interface Profile {
+    id: string,
+    userId: string,
+    username: string,
+    name: string,
+    profilePictureURL: string,
+    bio?: string,
+}
+
 // user information to be used on client
 declare module 'express-session' {
     export interface SessionData {
@@ -93,31 +102,31 @@ export interface Follower{
     accepted: boolean,
 }
 
-const multerStorage = multer.diskStorage({
-    destination: (req: Request, file, cb) => {
-        // resources/users/{userID}/pictures/{pictureID}.extension
-        let dir = craftPictureDest(req.session.user!.id);
-        fs.mkdir(dir, { recursive: true }, (err) => {
-            if (err) {
-                throw err;
+export const uploadFiles: (fileType: string) => multer.Multer = (fileType: string) => {
+    const multerStorage = multer.diskStorage({
+        destination: (req: Request, file, cb) => {
+            let dir: string;
+            if (fileType === 'post') {
+                // resources/users/{userID}/pictures/{pictureID}.extension
+                dir = craftPictureDest(req.session.user!.id);
+            } else {
+                // resources/users/{userID}/profile/{pictureID}.extension
+                dir = craftProfilePictureDest(req.session.user!.id);
             }
-            cb(
-                null,
-                dir
-            );
-        });
-    },
 
-    filename: (req: Request, file, cb) => {
-        cb(
-            null,
-            uuidv4() + path.extname(file.originalname)
-        );
-    }
-});
-
-// middleware for uploading files
-export const uploadFiles: Multer = multer({ storage: multerStorage });
+            fs.mkdir(dir, { recursive: true }, (err) => {
+                if (err) {
+                    throw err;
+                }
+                cb(null, dir);
+            });
+        },
+        filename: (req: Request, file, cb) => {
+            cb(null, uuidv4() + path.extname(file.originalname));
+        }
+    });
+    return multer({ storage: multerStorage });
+};
 
 export function deleteFiles(files: string[], callback: Function) {
     var i = files.length;
@@ -136,6 +145,10 @@ export function deleteFiles(files: string[], callback: Function) {
 
 export function craftPictureDest(userId: string): string {
     return path.join('resources/users/', userId, 'pictures/');
+}
+
+export function craftProfilePictureDest(userId: string): string {
+    return path.join("resources/users/", userId, "profile/");
 }
 
 export function moveFiles(dir: string, files: string[], callback: Function) {
@@ -170,8 +183,8 @@ export function zipDirectory(sourceDir: string, outPath: string): Promise<void |
     });
 }
 
-export function uploadMedia(req: Request, res: Response, next: NextFunction) {
-    const upload = uploadFiles.array('media', 10);
+export function uploadMedia(req: Request, res: Response, next: NextFunction, fileType: string) {
+    const upload = fileType === 'post' ? uploadFiles(fileType).array('media', 10) : uploadFiles(fileType).single('media');
 
     upload(req, res, function (err) {
         if (err instanceof multer.MulterError) {
@@ -191,7 +204,6 @@ export function uploadMedia(req: Request, res: Response, next: NextFunction) {
         return next();
     })
 }
-
 
 export const authenticationController: AuthenticationController = new AuthenticationController();
 export const postController: PostController = new PostController();
