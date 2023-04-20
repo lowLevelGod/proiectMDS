@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS public."Profiles"
     "userId" text COLLATE pg_catalog."default" NOT NULL,
     "username" text COLLATE pg_catalog."default" NOT NULL,
     "name" text COLLATE pg_catalog."default" NOT NULL,
-    "profilePictureURL" text,
+    "profilePictureURL" text NOT NULL,
     "bio" text,
     CONSTRAINT "Profiles_pkey" PRIMARY KEY ("id"),
     CONSTRAINT "profiles_userId_fkey" FOREIGN KEY ("userId")

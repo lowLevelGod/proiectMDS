@@ -13,6 +13,7 @@ import { CommentsController } from '../controllers/CommentsController';
 import { FollowersController } from '../controllers/FollowersController';
 import { PostLikesController } from '../controllers/PostLikesController'; 
 import { CommentLikesController } from '../controllers/CommentLikesController'; 
+import { ProfileController, getProfileByUserId } from '../controllers/ProfileController';
 
 // database connection
 const knexConfig: Knex.Config = {
@@ -102,31 +103,59 @@ export interface Follower{
     accepted: boolean,
 }
 
-export const uploadFiles: (fileType: string) => multer.Multer = (fileType: string) => {
-    const multerStorage = multer.diskStorage({
-        destination: (req: Request, file, cb) => {
-            let dir: string;
-            if (fileType === 'post') {
-                // resources/users/{userID}/pictures/{pictureID}.extension
-                dir = craftPictureDest(req.session.user!.id);
-            } else {
-                // resources/users/{userID}/profile/{pictureID}.extension
-                dir = craftProfilePictureDest(req.session.user!.id);
+const multerPosts = multer.diskStorage({
+    destination: (req: Request, file, cb) => {
+        // resources/users/{userID}/pictures/{pictureID}.extension
+        let dir = craftPictureDest(req.session.user!.id);
+        fs.mkdir(dir, { recursive: true }, (err) => {
+            if (err) {
+                throw err;
             }
+            cb(
+                null,
+                dir
+            );
+        });
+    },
 
-            fs.mkdir(dir, { recursive: true }, (err) => {
-                if (err) {
-                    throw err;
-                }
-                cb(null, dir);
-            });
-        },
-        filename: (req: Request, file, cb) => {
-            cb(null, uuidv4() + path.extname(file.originalname));
-        }
-    });
-    return multer({ storage: multerStorage });
-};
+    filename: (req: Request, file, cb) => {
+        cb(
+            null,
+            uuidv4() + path.extname(file.originalname)
+        );
+    }
+});
+
+// middleware for uploading posts
+export const uploadPosts: Multer = multer({ storage: multerPosts });
+
+
+const multerProfiles = multer.diskStorage({
+    destination: (req: Request, file, cb) => {
+        // resources/users/{userID}/profile/{pictureID}.extension
+        let dir = craftProfilePictureDest(req.session.user!.id);
+        console.log(dir);
+        fs.mkdir(dir, { recursive: true }, (err) => {
+            if (err) {
+                throw err;
+            }
+            cb(
+                null,
+                dir
+                );
+        });
+    },
+
+    filename: (req: Request, file, cb) => {
+        cb(
+            null,
+            uuidv4() + path.extname(file.originalname)
+        );
+    }
+});
+
+// middleware for uploading profiles
+export const uploadProfiles: Multer = multer({ storage: multerProfiles });
 
 export function deleteFiles(files: string[], callback: Function) {
     var i = files.length;
@@ -183,8 +212,8 @@ export function zipDirectory(sourceDir: string, outPath: string): Promise<void |
     });
 }
 
-export function uploadMedia(req: Request, res: Response, next: NextFunction, fileType: string) {
-    const upload = fileType === 'post' ? uploadFiles(fileType).array('media', 10) : uploadFiles(fileType).single('media');
+export function uploadMediaPosts(req: Request, res: Response, next: NextFunction) {
+    const upload = uploadPosts.array('media', 10);
 
     upload(req, res, function (err) {
         if (err instanceof multer.MulterError) {
@@ -205,9 +234,74 @@ export function uploadMedia(req: Request, res: Response, next: NextFunction, fil
     })
 }
 
+export function uploadMediaProfiles(req: Request, res: Response, next: NextFunction) {
+    const upload = uploadProfiles.single('media');
+
+    upload(req, res, function (err) {
+        if (err instanceof multer.MulterError) {
+            if (err.message === 'Unexpected field') {
+                const error = craftError(errorCodes.failedToUpload, "Too many files!");
+                return res.status(400).json({ error, content: undefined });
+            }
+            // A Multer error occurred when uploading.
+            const error = craftError(errorCodes.failedToUpload, "Please try uploading again!");
+            return res.status(500).json({ error, content: undefined });
+        } else if (err) {
+            // An unknown error occurred when uploading.
+            const error = craftError(errorCodes.failedToUpload, "Please try uploading again!");
+            return res.status(500).json({ error, content: undefined });
+        }
+        // Everything went fine. 
+        return next();
+    })
+}
+
+// middleware to verify if a profile exists
+export function ProfileExists(req: Request, res: Response, next: NextFunction) {
+    console.log("sunt in profile exists");
+    const userId = req.session.user!.id;
+    getProfileByUserId(userId)
+      .then((profile) => {
+        if (!profile) {
+          const error = craftError(errorCodes.notFound, 'Profile not found for this user!');
+          return res.status(404).json({ error, content: undefined });
+        }
+        // pass control to the next middleware
+        return next();
+      })
+      .catch((err) => {
+        console.error(err.message);
+        const error = craftError(errorCodes.other, 'Please try again!');
+        return res.status(500).json({ error, content: undefined });
+      });
+  }
+
+
+// middleware to verify if a profile does not exists
+export function ProfileDoesNotExist(req: Request, res: Response, next: NextFunction) {
+    console.log("sunt in profile does not exists");
+
+    const userId = req.session.user!.id;
+    getProfileByUserId(userId)
+      .then((profile) => {
+        if (profile) {
+          const error = craftError(errorCodes.entityExists, 'A profile already exists for this user!');
+          return res.status(404).json({ error, content: undefined });
+        }
+        // pass control to the next middleware
+        return next();
+      })
+      .catch((err) => {
+        console.error(err.message);
+        const error = craftError(errorCodes.other, 'Please try again!');
+        return res.status(500).json({ error, content: undefined });
+      });
+  }
+
 export const authenticationController: AuthenticationController = new AuthenticationController();
 export const postController: PostController = new PostController();
 export const commentController: CommentsController = new CommentsController();
 export const followerController: FollowersController = new FollowersController();
 export const postLikeController: PostLikesController = new PostLikesController();
 export const commentLikeController: CommentLikesController = new CommentLikesController();
+export const profileController: ProfileController = new ProfileController();
