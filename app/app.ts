@@ -14,11 +14,11 @@ import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import archiver from 'archiver';
-
 import {auth} from './routes/AuthenticationRoutes';
 import { postRouter } from './routes/PostRoutes';
 import { commentRouter } from './routes/CommentRoutes';
 import { followerRouter } from './routes/FollowerRoutes';
+import { profileRouter } from './routes/ProfileRoutes';
 
 const app: Express = express();
 const port: number = 8080;
@@ -69,6 +69,7 @@ app.use(auth);
 app.use(postRouter);
 app.use(commentRouter);
 app.use(followerRouter);
+app.use(profileRouter);
 
 const httpsServer = https.createServer(options, app);
 httpsServer.listen(port, () => {
