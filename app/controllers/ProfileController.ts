@@ -19,26 +19,6 @@ function getProfileMetaData(profile: Profile): Partial<Profile> {
     return profileMetaData;
 }
 
-function getProfileById(profileId: string): Promise<Partial<Profile> | undefined> {
-    return knexInstance
-        .select('userId', 'profilePictureURL')
-        .from('Profiles')
-        .where('id', profileId)
-        .then(x => {
-            if (x.length === 0)
-                return undefined;
-            const res: Partial<Profile> = {
-                userId: x[0].userId,
-                profilePictureURL: x[0].profilePictureURL
-            };
-            return res;
-        })
-        .catch(err => {
-            console.error(err.message);
-            return undefined;
-        });
-}
-
 export function getProfileByUserId(userId: string): Promise<Partial<Profile> | undefined> {
     return knexInstance
         .select('id', 'profilePictureURL')
@@ -62,6 +42,25 @@ export function getProfileByUserId(userId: string): Promise<Partial<Profile> | u
 
 export class ProfileController {
     
+    getProfile(req: Request, res: Response, next: NextFunction) {
+        knexInstance
+            .select('*')
+            .from('Profiles')
+            .where('userId', req.params.id)
+            .then(arr => {
+                if (arr.length === 0) {
+                    const error = craftError(errorCodes.notFound, "Profile not found!");
+                    return res.status(404).json({ error, content: undefined });
+                }
+                return res.status(200).json({ error: undefined, content: arr[0] });
+            })
+            .catch(err => {
+                console.error(err.message);
+                const error = craftError(errorCodes.other, "Please try again!");
+                return res.status(500).json({ error, content: undefined });
+            })
+    }
+
     create(req: Request, res: Response, next: NextFunction) {
         let profile = {
             id: uuidv4(),
@@ -85,51 +84,7 @@ export class ProfileController {
                 return res.status(500).json({ error, content: undefined });
             })
     }
-
-    delete(req: Request, res: Response, next: NextFunction) {
-        const userId = req.session.user!.id;
-
-        // Find profile in the database
-        getProfileByUserId(userId)
-            .then(profile => {
-                if (!profile) {
-                    const error = craftError(errorCodes.notFound, "Profile not found!");
-                    return res.status(404).json({ error, content: undefined});
-                }
-
-                const profileId = profile!.id;
-                const profilePictureURL = profile!.profilePictureURL;
-
-                // Delete the profile from database
-                knexInstance
-                    .from('Profiles')
-                    .where('id', profileId)
-                    .del()
-                    .then(() => {
-                        // Delete the files associated with the profile
-                        if (profilePictureURL !== defaultProfilePictureURL) {
-                            const paths = [path.join(craftProfilePictureDest(userId), profilePictureURL!)];
-                            deleteFiles(paths, function (err: any) {
-                                if (err) {
-                                    console.error(err.message);
-                                }
-                                return res.status(200).json({ error: undefined, content: undefined });
-                            })
-                        }     
-                    })
-                    .catch(err => {
-                        console.error(err.message);
-                        const error = craftError(errorCodes.other, "Please try deleting again!");
-                        return res.status(500).json({ error, content: undefined });
-                    })
-            })
-            .catch(err => {
-                console.error(err.message);
-                const error = craftError(errorCodes.other, "Please try deleting again!");
-                return res.status(500).json({ error, content: undefined });
-            })
-    }
-
+    
     patch(req: Request, res: Response, next: NextFunction) {
         const userId = req.session.user!.id;
 
@@ -186,6 +141,50 @@ export class ProfileController {
             .catch(err => {
                 console.error(err.message);
                 const error = craftError(errorCodes.other, "Please try again!");
+                return res.status(500).json({ error, content: undefined });
+            })
+    }
+
+    delete(req: Request, res: Response, next: NextFunction) {
+        const userId = req.session.user!.id;
+
+        // Find profile in the database
+        getProfileByUserId(userId)
+            .then(profile => {
+                if (!profile) {
+                    const error = craftError(errorCodes.notFound, "Profile not found!");
+                    return res.status(404).json({ error, content: undefined});
+                }
+
+                const profileId = profile!.id;
+                const profilePictureURL = profile!.profilePictureURL;
+
+                // Delete the profile from database
+                knexInstance
+                    .from('Profiles')
+                    .where('id', profileId)
+                    .del()
+                    .then(() => {
+                        // Delete the files associated with the profile
+                        if (profilePictureURL !== defaultProfilePictureURL) {
+                            const paths = [path.join(craftProfilePictureDest(userId), profilePictureURL!)];
+                            deleteFiles(paths, function (err: any) {
+                                if (err) {
+                                    console.error(err.message);
+                                }
+                                return res.status(200).json({ error: undefined, content: undefined });
+                            })
+                        }     
+                    })
+                    .catch(err => {
+                        console.error(err.message);
+                        const error = craftError(errorCodes.other, "Please try deleting again!");
+                        return res.status(500).json({ error, content: undefined });
+                    })
+            })
+            .catch(err => {
+                console.error(err.message);
+                const error = craftError(errorCodes.other, "Please try deleting again!");
                 return res.status(500).json({ error, content: undefined });
             })
     }

@@ -3,7 +3,8 @@ import { authenticationController, profileController, uploadMediaProfiles, Profi
 
 export const profileRouter = express.Router();
 
+profileRouter.get('/profiles/:id', authenticationController.isAuthenticated, profileController.getProfile);
 profileRouter.post('/profiles', authenticationController.isAuthenticated, ProfileDoesNotExist, uploadMediaProfiles, profileController.create);
+profileRouter.patch('/profiles', authenticationController.isAuthenticated, ProfileExists, uploadMediaProfiles, profileController.patch);
 profileRouter.delete('/profiles', authenticationController.isAuthenticated, profileController.delete);
 profileRouter.delete('/profiles/picture', authenticationController.isAuthenticated, profileController.deleteProfilePicture);
-profileRouter.patch('/profiles', authenticationController.isAuthenticated, ProfileExists, uploadMediaProfiles, profileController.patch);

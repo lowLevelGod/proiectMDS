@@ -134,7 +134,6 @@ export class PostController {
                     const error = craftError(errorCodes.notFound, "Post not found!");
                     return res.status(404).json({ error, content: undefined });
                 }
-
                 return res.status(200).json({ error: undefined, content: getPostMetaData(arr[0]) });
             })
             .catch(err => {
