@@ -13,20 +13,24 @@ Our social media application allows users to create accounts in order to create 
 
 ## User Stories:
 
+### Must-Have
+
 1. As a user, I want to be able to post pictures on my profile and see other people's pictures as well.
-2. As a user, I want to get content recommendations based on posts I liked previously.
-3. As a user, I want to be able to make video calls to my friends.
+2. As a user, I must have a login form in order to enter my account.
+3. As a user, I must have a signup form in order to create an account.
 4. As a user, I want to be able to send text messages to other users.
 5. As a user, I want to be able to comment and leave reactions on other people's posts.
 6. As a user, I want to be able to enter a separate chat room if I want to thoroughly debate a hot topic brought by other users in a comment or post.
 7. As a user, I want to be able to allow only certain people to see my posts or send me messages.
 8. As a user, I want to be able to search other people's names and connect with them.
 9. As a user, I want to be able to follow certain profiles and see the content they post on my front page.
+
+### Nice-to-have
+
 10. As a business-owner, I want to be able to see how many people viewed my profile over time.
-11. As a user, I must have a signup form in order to create an account.
-12. As a user, I must have a login form in order to enter my account.
+11. As a user, I want to be able to make serverless video calls.
+12. As a user, I want to get content recommendations based on posts I liked previously.
 13. As a user, I want to get notifications.
-14. As a user, I want to be able to make serverless video calls.
 
 ## UML
 
