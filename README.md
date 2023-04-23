@@ -28,28 +28,6 @@ Our social media application allows users to create accounts in order to create 
 13. As a user, I want to get notifications.
 14. As a user, I want to be able to make serverless video calls.
 
-### Main User Stories
-
-1. As a project manager, I want to be able to create new projects and assign team members to them, so that I can effectively manage multiple projects.
-   - Importance: Must Have
-
-2. As a team member, I want to be able to view the list of tasks assigned to me and update their status, so that I can stay organized and track progress.
-   - Importance: Must Have
-
-3. As a team member, I want to be able to communicate with other team members through a messaging system, so that I can collaborate effectively on tasks and projects.
-   - Importance: Must Have
-
-### Sub User Stories
-
-1. As a team member, I want to be able to set deadlines for tasks and receive notifications when they are due, so that I can stay on track and complete tasks on time.
-   - Importance: Should Have
-
-2. As a team member, I want to be able to attach files to tasks and projects, so that I can share relevant documents and resources with my team.
-   - Importance: Should Have
-
-3. As a project manager, I want to be able to generate reports on project progress and team performance, so that I can make data-driven decisions.
-   - Importance: Nice to Have
-
 ## UML
 
 - [UML Diagram](http://www.plantuml.com/plantuml/dpng/dPJFJiCm3CRlVOeS-REzm4v3I0Ya7IQcdH27a9Wk8asg91sQ4EzEEYUb2Q4Rd5RRly_vd7fTMaUDwnfPLKnIQydMWY4V5I62amNPE2DKxIDeg93ZHElXTstuFRMx8K-gpzXdRVIha51erLam3pyoYZQGz4VzMZ3N6TW-hiR577uHUWX75hHrXVEP0Ug0tpYVvFwfQ8c3PKQqJcYLk48xrlknG_xfUJJthMuQKFy-j_MUqmpJolKDo_Ejn1lUyUbMkSK9AKEYeCO5sO3P2uRgQmI8WLfO1-O2OzoO6OcHOkRGEk3hi3UN8wdKjL1_qUsru8JjgAeXveCSXq7gkCerkFxtjp872GvAHBx9oSmX5zvfY0fdHCwxE0rrBJ-h6NekS-bsf9vz8XhsZvam4jWz8N2H1W9zJX9-t8co_xz8OO-lfGzjsKd4xW1u4SltEHaMSt7U4AKTPYIt5sNn4Z8Pmp11yJREH6jmPt7zs7xa2Dla7d7ou_BEvrV3TtP1TjGIhM1KydZ8DrGTlWlODwdrR58hwU87foXCY-KJytf8Jo7L4XJl6la5)
