@@ -38,6 +38,8 @@ let redisStore = new RedisStore({
     prefix: "proiectmds:",
 });
 
+app.use(express.static('resources'))
+
 // cookie options
 app.use(
     session({
