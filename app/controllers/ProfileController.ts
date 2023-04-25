@@ -61,6 +61,8 @@ export class ProfileController {
             })
     }
 
+    
+
     create(req: Request, res: Response, next: NextFunction) {
         let profile = {
             id: uuidv4(),
