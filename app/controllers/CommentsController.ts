@@ -104,10 +104,10 @@ export class CommentsController {
                 .where('postId', req.params.postId)
                 .andWhere('parentId', null)
                 .then((arr: Comment[]) => {
-                    if (arr.length === 0) {
-                        const error = craftError(errorCodes.notFound, "No comments found!");
-                        return res.status(404).json({ error, content: undefined });
-                    }
+                    // if (arr.length === 0) {
+                    //     const error = craftError(errorCodes.notFound, "No comments found!");
+                    //     return res.status(404).json({ error, content: undefined });
+                    // }
 
                     return res.status(200).json({ error: undefined, content: arr });
                 })
@@ -120,10 +120,10 @@ export class CommentsController {
             query
                 .where('parentId', req.params.id)
                 .then((arr: Comment[]) => {
-                    if (arr.length === 0) {
-                        const error = craftError(errorCodes.notFound, "No replies found!");
-                        return res.status(404).json({ error, content: undefined });
-                    }
+                    // if (arr.length === 0) {
+                    //     const error = craftError(errorCodes.notFound, "No replies found!");
+                    //     return res.status(404).json({ error, content: undefined });
+                    // }
 
                     return res.status(200).json({ error: undefined, content: arr });
                 })
