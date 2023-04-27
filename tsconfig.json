@@ -111,6 +111,7 @@
     "app/controllers/*.ts",
     "app/routes/*.ts",
     "app/utils/*.ts",
-    "openAPI/*.ts"
+    "openAPI/*.ts",
+    "test/*.ts"
   ],
 }

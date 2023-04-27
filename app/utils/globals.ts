@@ -8,7 +8,7 @@ import multer, { Multer, MulterError } from 'multer';
 import session from "express-session";
 import express, { Express, Request, Response, RequestHandler, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { craftError, errorCodes } from './error';
+import { craftError, Error, errorCodes } from './error';
 import { CommentsController } from '../controllers/CommentsController';
 import { FollowersController } from '../controllers/FollowersController';
 import { PostLikesController } from '../controllers/PostLikesController'; 
@@ -102,6 +102,11 @@ export interface Follower{
     followedBy: string,
     accepted: boolean,
 }
+
+export interface GenericResponse<TResponse> {
+    error: Error;
+    content: TResponse;
+  }
 
 const multerPosts = multer.diskStorage({
     destination: (req: Request, file, cb) => {
