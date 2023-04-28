@@ -1,74 +1,10 @@
-import axios, { AxiosError, AxiosInstance, AxiosResponse } from 'axios';
-import { SessionData } from 'express-session';
-import https from 'https';
+import { AxiosError, AxiosResponse } from 'axios';
 import { GenericResponse } from '../app/utils/globals';
 import { expect } from 'chai';
-
-// At request level
-const agent = new https.Agent({
-    rejectUnauthorized: false
-});
-
-const options = {
-    httpsAgent: agent,
-    withCredentials: true,
-};
-
-function createAxios(): AxiosInstance {
-    return axios.create(options);
-}
-
-const axiosInstance: AxiosInstance = createAxios();
-
-export interface UserInfo {
-    id: string,
-    email: string,
-    username: string,
-};
-
-const userCredentials = {
-    password: 'My Secret Password',
-    email: 'test2@email.com',
-};
-
-const badCredentials = {
-    password: 'wrong',
-    email: 'test2@email.com',
-};
-
-let myCookies: string[] | undefined;
-
-
-function signup(): Promise<AxiosResponse> {
-    return axiosInstance.post('https://localhost:8080/signup', new URLSearchParams(userCredentials))
-        .then((response: AxiosResponse<GenericResponse<UserInfo>>) => {
-            myCookies = response.headers['set-cookie']!;
-            return response;
-        });
-}
+import { UserInfo, axiosInstance, badCredentials, userCredentials, myCookies, signup, login, logout, deleteUser } from './setup';
 
 function whoami(): Promise<AxiosResponse> {
     return axiosInstance.get('https://localhost:8080/whoami', { headers: { cookie: myCookies } });
-}
-
-function logout(): Promise<AxiosResponse> {
-    return axiosInstance.get('https://localhost:8080/logout', { headers: { cookie: myCookies } })
-        .then(response => {
-            myCookies = undefined;
-            return response;
-        });
-}
-
-function login(credentials: any): Promise<AxiosResponse> {
-    return axiosInstance.post('https://localhost:8080/login', new URLSearchParams(credentials))
-        .then((response: AxiosResponse<GenericResponse<UserInfo>>) => {
-            myCookies = response.headers['set-cookie']!;
-            return response;
-        });
-}
-
-function deleteUser(): Promise<AxiosResponse> {
-    return axiosInstance.delete('https://localhost:8080/users/delete', { headers: { cookie: myCookies } });
 }
 
 describe('#Sign up', function () {
