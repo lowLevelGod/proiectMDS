@@ -1,5 +1,5 @@
 import { AxiosError, AxiosResponse } from "axios";
-import { axiosInstance, baseUrl, deleteUser, errorHandler, login, logout, myCookies, readFiles, signup, userCredentials } from "./setup";
+import { axiosInstance, baseUrl, deleteUser, errorHandler, login, logout, myCookies, readFiles, signup, user, userCredentials } from "./setup";
 import { GenericResponse, Post } from "../app/utils/globals";
 import { expect } from "chai";
 import { errorCodes } from "../app/utils/error";
@@ -35,6 +35,19 @@ function getSinglePost(id: string): Promise<AxiosResponse> {
     return axiosInstance.get(myURL.href);
 }
 
+function getPostMedia(id: string): Promise<AxiosResponse> {
+
+    const myURL = new URL('/posts' + '/' + id + '/media', baseUrl);
+    return axiosInstance.get(myURL.href);
+}
+
+function getPostsByUser(id: string): Promise<AxiosResponse> {
+
+    const myURL = new URL('/posts', baseUrl);
+    myURL.searchParams.append('userid', id);
+    return axiosInstance.get(myURL.href);
+}
+
 let createdPost: Partial<Post>;
 function createDummyPost(): Promise<void> {
 
@@ -44,7 +57,7 @@ function createDummyPost(): Promise<void> {
     return login(userCredentials)
         .then(() => readFiles(postCreate.picturesURLs!))
         .then((files: Buffer[]) => {
-            files.forEach((elem) => data.append('media', elem))
+            files.forEach((elem) => data.append('media', elem, {filename: 'test_photo.png'}))
         })
         .then(() => create(data))
         .then((res: AxiosResponse<GenericResponse<Post>>) => {
@@ -103,6 +116,27 @@ describe('Post tests', function () {
                     const id: string = response.data.content.id;
                     expect(id).to.be.a('string');
                     expect(id).to.equal(createdPost.id);
+                });
+            });
+
+            context('Get post media', function () {
+                it('Should be SUCCESS', async () => {
+                    const response: AxiosResponse<GenericResponse<Post>> = await getPostMedia(createdPost.id!);
+                    expect(response.status).to.equal(200);
+                    expect(response.data).to.have.property('content');
+                    const urls: string[] = response.data.content.picturesURLs;
+                    expect(urls).to.be.an('array');
+                });
+            });
+
+            context('Get posts by user', function () {
+                it('Should be SUCCESS', async () => {
+                    const response: AxiosResponse<GenericResponse<Post[]>> = await getPostsByUser(createdPost!.userId!);
+                    expect(response.status).to.equal(200);
+                    expect(response.data).to.have.property('content');
+                    const posts: Post[] = response.data.content;
+                    expect(posts).to.be.an('array');
+                    // console.log(posts);
                 });
             });
         });

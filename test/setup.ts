@@ -38,6 +38,8 @@ export const badCredentials = {
     email: 'test2@email.com',
 };
 
+export let user: Partial<UserInfo> | undefined;
+
 export let myCookies: string[] | undefined;
 
 export const baseUrl = 'https://localhost:8080/';
@@ -46,6 +48,7 @@ export function login(credentials: any): Promise<AxiosResponse> {
     return axiosInstance.post('https://localhost:8080/login', new URLSearchParams(credentials))
         .then((response: AxiosResponse<GenericResponse<UserInfo>>) => {
             myCookies = response.headers['set-cookie']!;
+            user = response.data.content;
             return response;
         });
 }
@@ -54,6 +57,7 @@ export function logout(): Promise<AxiosResponse> {
     return axiosInstance.get('https://localhost:8080/logout', { headers: { cookie: myCookies } })
         .then(response => {
             myCookies = undefined;
+            user = undefined;
             return response;
         });
 }
@@ -62,6 +66,7 @@ export function signup(): Promise<AxiosResponse> {
     return axiosInstance.post('https://localhost:8080/signup', new URLSearchParams(userCredentials))
         .then((response: AxiosResponse<GenericResponse<UserInfo>>) => {
             myCookies = response.headers['set-cookie']!;
+            user = response.data.content;
             return response;
         });
 }
