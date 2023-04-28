@@ -11,11 +11,11 @@ CREATE TABLE IF NOT EXISTS public."Followers"
     CONSTRAINT "followers_followedBy_fkey" FOREIGN KEY ("followedBy")
         REFERENCES public."Users" (id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
+        ON DELETE CASCADE,
     CONSTRAINT followers_follows_fkey FOREIGN KEY (follows)
         REFERENCES public."Users" (id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+        ON DELETE CASCADE
 )
 
 TABLESPACE pg_default;

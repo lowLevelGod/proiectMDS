@@ -10,11 +10,11 @@ CREATE TABLE IF NOT EXISTS public."PostLikes"
     CONSTRAINT "postLikes_userId_fkey" FOREIGN KEY ("userId")
         REFERENCES public."Users" (id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
+        ON DELETE CASCADE,
     CONSTRAINT "postLikes_postId_fkey" FOREIGN KEY ("postId")
         REFERENCES public."Posts" (id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+        ON DELETE CASCADE
 )
 
 TABLESPACE pg_default;

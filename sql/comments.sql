@@ -14,16 +14,16 @@ CREATE TABLE IF NOT EXISTS public."Comments"
     CONSTRAINT "comments_parentId_fkey" FOREIGN KEY ("parentId")
         REFERENCES public."Comments" (id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+        ON DELETE CASCADE
         NOT VALID,
     CONSTRAINT "comments_postId_fkey" FOREIGN KEY ("postId")
         REFERENCES public."Posts" (id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
+        ON DELETE CASCADE,
     CONSTRAINT "comments_userId_fkey" FOREIGN KEY ("userId")
         REFERENCES public."Users" (id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+        ON DELETE CASCADE
 )
 
 TABLESPACE pg_default;
