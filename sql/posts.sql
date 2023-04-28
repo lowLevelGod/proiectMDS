@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public."Posts"
     CONSTRAINT "posts_userId_fkey" FOREIGN KEY ("userId")
         REFERENCES public."Users" (id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+        ON DELETE CASCADE
 )
 
 TABLESPACE pg_default;
