@@ -44,6 +44,7 @@ export const badCredentials = {
 };
 
 export let user: Partial<UserInfo> | undefined;
+export let user2: Partial<UserInfo> | undefined;
 
 export let myCookies: string[] | undefined;
 
@@ -53,7 +54,10 @@ export function login(credentials: any): Promise<AxiosResponse> {
     return axiosInstance.post('https://localhost:8080/login', new URLSearchParams(credentials))
         .then((response: AxiosResponse<GenericResponse<UserInfo>>) => {
             myCookies = response.headers['set-cookie']!;
-            user = response.data.content;
+            if (credentials.email === userCredentials.email)
+                user = response.data.content;
+            else
+                user2 = response.data.content;
             return response;
         });
 }
@@ -62,7 +66,6 @@ export function logout(): Promise<AxiosResponse> {
     return axiosInstance.get('https://localhost:8080/logout', { headers: { cookie: myCookies } })
         .then(response => {
             myCookies = undefined;
-            user = undefined;
             return response;
         });
 }
@@ -80,7 +83,7 @@ export function signup2(): Promise<AxiosResponse> {
     return axiosInstance.post('https://localhost:8080/signup', new URLSearchParams(userCredentials2))
         .then((response: AxiosResponse<GenericResponse<UserInfo>>) => {
             myCookies = response.headers['set-cookie']!;
-            user = response.data.content;
+            user2 = response.data.content;
             return response;
         });
 }
