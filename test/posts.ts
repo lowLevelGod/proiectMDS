@@ -48,6 +48,10 @@ function getPostsByUser(id: string): Promise<AxiosResponse> {
     return axiosInstance.get(myURL.href);
 }
 
+function loginWrapper(): Promise<AxiosResponse> {
+    return login(userCredentials);
+}
+
 let createdPost: Partial<Post>;
 function createDummyPost(): Promise<void> {
 
@@ -57,7 +61,7 @@ function createDummyPost(): Promise<void> {
     return login(userCredentials)
         .then(() => readFiles(postCreate.picturesURLs!))
         .then((files: Buffer[]) => {
-            files.forEach((elem) => data.append('media', elem, {filename: 'test_photo.png'}))
+            files.forEach((elem) => data.append('media', elem, { filename: 'test_photo.png' }))
         })
         .then(() => create(data))
         .then((res: AxiosResponse<GenericResponse<Post>>) => {
@@ -138,6 +142,48 @@ describe('Post tests', function () {
                     expect(posts).to.be.an('array');
                     // console.log(posts);
                 });
+            });
+        });
+    });
+
+    describe('Post tests logged in', function () {
+        before(loginWrapper);
+
+        context('Create post', function () {
+            it('Should be SUCCESS', async () => {
+                let data = new FormData();
+                data.append('description', postCreate.description!);
+
+                const promise = readFiles(postCreate.picturesURLs!)
+                    .then((files: Buffer[]) => {
+                        files.forEach((elem) => data.append('media', elem, { filename: 'test_photo.png' }))
+                    })
+                    .then(() => create(data));
+
+                const response: AxiosResponse<GenericResponse<Post>> = await promise;
+                expect(response.status).to.equal(200);
+                expect(response.data).to.have.property('content');
+                const id: string = response.data.content.id;
+                expect(id).to.be.a('string');
+            });
+        });
+
+        context('Edit post', function () {
+            it('Should be SUCCESS', async () => {
+                const response: AxiosResponse<GenericResponse<Post>> = await edit({description: "modified"}, createdPost.id!);
+                expect(response.status).to.equal(200);
+                expect(response.data).to.have.property('content');
+                const id: string = response.data.content.id;
+                expect(id).to.be.a('string');
+                expect(id).to.equal(createdPost.id);
+                expect(response.data.content.description).to.equal("modified");
+            });
+        });
+
+        context('Delete post', function () {
+            it('Should be SUCCESS', async () => {
+                const response: AxiosResponse<GenericResponse<Post>> = await deletePost(createdPost.id!);
+                expect(response.status).to.equal(200);
             });
         });
     });
