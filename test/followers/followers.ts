@@ -131,10 +131,10 @@ describe('Follower tests', function () {
 
             context('Get single follow', function () {
                 it('Should be SUCCESS', async () => {
-                    const response: AxiosResponse<GenericResponse<Follower>> = await getSingleFollow(user!.id!, user2!.id!);
+                    const response: AxiosResponse<GenericResponse<Follower[]>> = await getSingleFollow(user!.id!, user2!.id!);
                     expect(response.status).to.equal(200);
                     expect(response.data).to.have.property('content');
-                    const id: string = response.data.content.follows;
+                    const id: string = response.data.content[0].follows;
                     expect(id).to.be.a('string');
                     expect(id).to.equal(user!.id!);
                 });
