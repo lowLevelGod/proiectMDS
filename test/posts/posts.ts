@@ -1,21 +1,11 @@
 import { AxiosError, AxiosResponse } from "axios";
-import { axiosInstance, baseUrl, deleteUser, errorHandler, login, logout, myCookies, readFiles, signup, signup2, user, userCredentials, userCredentials2 } from "./setup";
-import { GenericResponse, Post } from "../app/utils/globals";
+import { axiosInstance, baseUrl, deleteUser, errorHandler, login, logout, myCookies, readFiles, signup, signup2, user, userCredentials, userCredentials2 } from "../setup";
+import { GenericResponse, Post } from "../../app/utils/globals";
 import { expect } from "chai";
-import { errorCodes } from "../app/utils/error";
+import { errorCodes } from "../../app/utils/error";
 import path from "path";
 import FormData from 'form-data';
-
-const postCreate: Partial<Post> = {
-    description: "This post is part of testing",
-    picturesURLs: [path.join(__dirname, 'Beluga.png')],
-}
-
-function create(data: FormData): Promise<AxiosResponse> {
-    let headers = data.getHeaders();
-    headers.cookie = myCookies;
-    return axiosInstance.post('https://localhost:8080/posts', data, { headers });
-}
+import { createDummyPost, createPost, createdPost, postCreate} from './postsSetup';
 
 function deletePost(id: string): Promise<AxiosResponse> {
 
@@ -52,25 +42,6 @@ function loginWrapper(): Promise<AxiosResponse> {
     return login(userCredentials);
 }
 
-let createdPost: Partial<Post>;
-function createDummyPost(): Promise<void> {
-
-    let data = new FormData();
-    data.append('description', postCreate.description!);
-
-    return login(userCredentials)
-        .then(() => readFiles(postCreate.picturesURLs!))
-        .then((files: Buffer[]) => {
-            files.forEach((elem) => data.append('media', elem, { filename: 'test_photo.png' }))
-        })
-        .then(() => create(data))
-        .then((res: AxiosResponse<GenericResponse<Post>>) => {
-            createdPost = res.data.content;
-        })
-        .then(() => logout())
-        .then(() => { });
-}
-
 function userCleanUp() {
     return login(userCredentials)
         .then(() => deleteUser());
@@ -105,7 +76,7 @@ describe('Post tests', function () {
         describe('#Logged out (needs authentication)', function () {
             context('Create post', function () {
                 it('Should be FAIL', async () => {
-                    return create(new FormData())
+                    return createPost(new FormData())
                         .catch((error: AxiosError<GenericResponse<Post>>) => errorHandler(error, 403, errorCodes.notLoggedIn));
                 });
             });
@@ -175,7 +146,7 @@ describe('Post tests', function () {
                     .then((files: Buffer[]) => {
                         files.forEach((elem) => data.append('media', elem, { filename: 'test_photo.png' }))
                     })
-                    .then(() => create(data));
+                    .then(() => createPost(data));
 
                 const response: AxiosResponse<GenericResponse<Post>> = await promise;
                 expect(response.status).to.equal(200);
