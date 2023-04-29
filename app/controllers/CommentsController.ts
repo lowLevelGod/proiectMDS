@@ -54,28 +54,24 @@ export class CommentsController {
                     comment.parentId = parentId;
                     knexInstance('Comments')
                         .insert(comment)
-                        .then(x => res.status(200).json({ error: undefined, content: comment }))
-                        .catch(err => {
-                            console.error(err.message);
-                            const error = craftError(errorCodes.other, "Please try commenting again!");
-                            return res.status(500).json({ error, content: undefined });
-                        });
+                        .then(x => res.status(200).json({ error: undefined, content: comment }));
                 })
                 .catch(err => {
                     console.error(err.message);
                     const error = craftError(errorCodes.other, "Please try commenting again!");
                     return res.status(500).json({ error, content: undefined });
                 });
-        }
+        }else{
 
-        knexInstance('Comments')
-            .insert(comment)
-            .then(x => res.status(200).json({ error: undefined, content: comment }))
-            .catch(err => {
-                console.error(err.message);
-                const error = craftError(errorCodes.other, "Please try commenting again!");
-                return res.status(500).json({ error, content: undefined });
-            });
+            knexInstance('Comments')
+                .insert(comment)
+                .then(x => res.status(200).json({ error: undefined, content: comment }))
+                .catch(err => {
+                    console.error(err.message);
+                    const error = craftError(errorCodes.other, "Please try commenting again!");
+                    return res.status(500).json({ error, content: undefined });
+                });
+        }
     }
 
     get(req: Request, res: Response, next: NextFunction) {
