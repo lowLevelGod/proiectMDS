@@ -1,5 +1,5 @@
 import { AxiosError, AxiosResponse } from "axios";
-import { axiosInstance, baseUrl, deleteUser, errorHandler, login, logout, myCookies, readFiles, signup, user, userCredentials } from "./setup";
+import { axiosInstance, baseUrl, deleteUser, errorHandler, login, logout, myCookies, readFiles, signup, signup2, user, userCredentials, userCredentials2 } from "./setup";
 import { GenericResponse, Post } from "../app/utils/globals";
 import { expect } from "chai";
 import { errorCodes } from "../app/utils/error";
@@ -65,15 +65,32 @@ function createDummyPost(): Promise<void> {
         })
         .then(() => create(data))
         .then((res: AxiosResponse<GenericResponse<Post>>) => {
-            createdPost = res.data.content
+            createdPost = res.data.content;
         })
         .then(() => logout())
         .then(() => { });
 }
 
 function userCleanUp() {
-    login(userCredentials)
+    return login(userCredentials)
         .then(() => deleteUser());
+}
+
+function userCleanUp2() {
+    return login(userCredentials2)
+        .then(() => deleteUser());
+}
+
+function wrongUserSetup() {
+    return signup()
+        .then(() => createDummyPost())
+        .then(() => logout())
+        .then(() => signup2());
+}
+
+function wrongUserCleanup() {
+    return userCleanUp()
+        .then(() => userCleanUp2());
 }
 
 describe('Post tests', function () {
@@ -170,7 +187,7 @@ describe('Post tests', function () {
 
         context('Edit post', function () {
             it('Should be SUCCESS', async () => {
-                const response: AxiosResponse<GenericResponse<Post>> = await edit({description: "modified"}, createdPost.id!);
+                const response: AxiosResponse<GenericResponse<Post>> = await edit({ description: "modified" }, createdPost.id!);
                 expect(response.status).to.equal(200);
                 expect(response.data).to.have.property('content');
                 const id: string = response.data.content.id;
@@ -185,6 +202,25 @@ describe('Post tests', function () {
                 const response: AxiosResponse<GenericResponse<Post>> = await deletePost(createdPost.id!);
                 expect(response.status).to.equal(200);
             });
+        });
+    });
+});
+
+describe('Post tests logged in with wrong user', function () {
+    before(wrongUserSetup);
+    after(wrongUserCleanup);
+
+    context('Edit post', function () {
+        it('Should be FAIL', async () => {
+            return edit({ description: "modified" }, createdPost.id!)
+                .catch((error: AxiosError<GenericResponse<Post>>) => errorHandler(error, 403, errorCodes.unAuthorized));
+        });
+    });
+
+    context('Delete post', function () {
+        it('Should be FAIL', async () => {
+            return deletePost(createdPost.id!)
+                .catch((error: AxiosError<GenericResponse<Post>>) => errorHandler(error, 403, errorCodes.unAuthorized));
         });
     });
 });

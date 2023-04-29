@@ -33,6 +33,11 @@ export const userCredentials = {
     email: 'test2@email.com',
 };
 
+export const userCredentials2 = {
+    password: 'My Secret Password',
+    email: 'test3@email.com',
+};
+
 export const badCredentials = {
     password: 'wrong',
     email: 'test2@email.com',
@@ -64,6 +69,15 @@ export function logout(): Promise<AxiosResponse> {
 
 export function signup(): Promise<AxiosResponse> {
     return axiosInstance.post('https://localhost:8080/signup', new URLSearchParams(userCredentials))
+        .then((response: AxiosResponse<GenericResponse<UserInfo>>) => {
+            myCookies = response.headers['set-cookie']!;
+            user = response.data.content;
+            return response;
+        });
+}
+
+export function signup2(): Promise<AxiosResponse> {
+    return axiosInstance.post('https://localhost:8080/signup', new URLSearchParams(userCredentials2))
         .then((response: AxiosResponse<GenericResponse<UserInfo>>) => {
             myCookies = response.headers['set-cookie']!;
             user = response.data.content;
