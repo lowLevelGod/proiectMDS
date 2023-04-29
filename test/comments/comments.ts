@@ -26,7 +26,7 @@ function createDummyComment(parent: string | undefined, credentials: any): Promi
             }
         })
         .then(() => logout())
-        .then(() => {});
+        .then(() => { });
 }
 
 function create(data: Partial<Comment>): Promise<AxiosResponse> {
@@ -61,9 +61,9 @@ function loginWrapper(): Promise<AxiosResponse> {
     return login(userCredentials);
 }
 
-function commentsSetup(){
+function commentsSetup() {
     return signup()
-    .then(() => createParentWrapper());
+        .then(() => createParentWrapper());
 }
 
 function userCleanUp() {
@@ -82,6 +82,17 @@ function createParentWrapper() {
 
 function createChildWrapper() {
     return createDummyComment(commentCreateParent.id!, userCredentials);
+}
+
+function wrongUserSetup() {
+    return commentsSetup()
+        .then(() => logout())
+        .then(() => signup2());
+}
+
+function wrongUserCleanup() {
+    return userCleanUp()
+        .then(() => userCleanUp2());
 }
 
 describe('Comment tests', function () {
@@ -147,65 +158,49 @@ describe('Comment tests', function () {
         });
     });
 
-    // describe('Post tests logged in', function () {
-    //     before(loginWrapper);
+    describe('Comment tests logged in', function () {
+        before(loginWrapper);
 
-    //     context('Create post', function () {
-    //         it('Should be SUCCESS', async () => {
-    //             let data = new FormData();
-    //             data.append('description', postCreate.description!);
+        context('Create comment', function () {
+            it('Should be SUCCESS', async () => {
 
-    //             const promise = readFiles(postCreate.picturesURLs!)
-    //                 .then((files: Buffer[]) => {
-    //                     files.forEach((elem) => data.append('media', elem, { filename: 'test_photo.png' }))
-    //                 })
-    //                 .then(() => create(data));
+                const response: AxiosResponse<GenericResponse<Comment>> = await create({
+                    postId: createdPost.id!,
+                    content: "Test comment",
+                });
 
-    //             const response: AxiosResponse<GenericResponse<Post>> = await promise;
-    //             expect(response.status).to.equal(200);
-    //             expect(response.data).to.have.property('content');
-    //             const id: string = response.data.content.id;
-    //             expect(id).to.be.a('string');
-    //         });
-    //     });
+                expect(response.status).to.equal(200);
+                expect(response.data).to.have.property('content');
+                const id: string = response.data.content.id;
+                expect(id).to.be.a('string');
+                expect(response.data.content.postId).to.equal(createdPost.id!);
+            });
+        });
 
-    //     context('Edit post', function () {
-    //         it('Should be SUCCESS', async () => {
-    //             const response: AxiosResponse<GenericResponse<Post>> = await edit({ description: "modified" }, createdPost.id!);
-    //             expect(response.status).to.equal(200);
-    //             expect(response.data).to.have.property('content');
-    //             const id: string = response.data.content.id;
-    //             expect(id).to.be.a('string');
-    //             expect(id).to.equal(createdPost.id);
-    //             expect(response.data.content.description).to.equal("modified");
-    //         });
-    //     });
+        context('Edit comment', function () {
+            it('Should be SUCCESS', async () => {
+                const response: AxiosResponse<GenericResponse<Comment>> = await edit({ content: "modified" }, commentCreateParent.id!);
+                expect(response.status).to.equal(200);
+                expect(response.data).to.have.property('content');
+                const id: string = response.data.content.id;
+                expect(id).to.be.a('string');
+                expect(id).to.equal(commentCreateParent.id!);
+                expect(response.data.content.content).to.equal("modified");
+            });
+        });
 
-    //     context('Delete post', function () {
-    //         it('Should be SUCCESS', async () => {
-    //             const response: AxiosResponse<GenericResponse<Post>> = await deletePost(createdPost.id!);
-    //             expect(response.status).to.equal(200);
-    //         });
-    //     });
-    // });
+    });
 });
 
-// describe('Post tests logged in with wrong user', function () {
-//     before(wrongUserSetup);
-//     after(wrongUserCleanup);
+describe('Comment tests logged in with wrong user', function () {
+    before(wrongUserSetup);
+    after(wrongUserCleanup);
 
-//     context('Edit post', function () {
-//         it('Should be FAIL', async () => {
-//             return edit({ description: "modified" }, createdPost.id!)
-//                 .catch((error: AxiosError<GenericResponse<Post>>) => errorHandler(error, 403, errorCodes.unAuthorized));
-//         });
-//     });
-
-//     context('Delete post', function () {
-//         it('Should be FAIL', async () => {
-//             return deletePost(createdPost.id!)
-//                 .catch((error: AxiosError<GenericResponse<Post>>) => errorHandler(error, 403, errorCodes.unAuthorized));
-//         });
-//     });
-// });
+    context('Edit comment', function () {
+        it('Should be FAIL', async () => {
+            return edit({ content: "modified" }, commentCreateParent.id!)
+                .catch((error: AxiosError<GenericResponse<Post>>) => errorHandler(error, 403, errorCodes.unAuthorized));
+        });
+    });
+});
 
