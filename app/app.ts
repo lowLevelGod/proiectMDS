@@ -14,13 +14,16 @@ import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import archiver from 'archiver';
-import {auth} from './routes/AuthenticationRoutes';
+import { auth } from './routes/AuthenticationRoutes';
 import { postRouter } from './routes/PostRoutes';
 import { commentRouter } from './routes/CommentRoutes';
 import { followerRouter } from './routes/FollowerRoutes';
 import { profileRouter } from './routes/ProfileRoutes';
 import { postLikeRouter } from './routes/PostLikeRoutes';
 import { commentLikeRouter } from './routes/CommentLikeRoutes';
+
+import swaggerUI from 'swagger-ui-express';
+import { swaggerDocument } from '../openAPI/swagger';
 
 const app: Express = express();
 const port: number = 8080;
@@ -40,7 +43,10 @@ let redisStore = new RedisStore({
     prefix: "proiectmds:",
 });
 
-app.use(express.static('resources'))
+app.use(express.static('resources'));
+
+
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 
 // cookie options
 app.use(
