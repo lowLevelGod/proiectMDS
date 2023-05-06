@@ -2,7 +2,7 @@
   "name": "proiectmds",
   "version": "1.0.0",
   "description": "proiect echipa brontosaur",
-  "main": "app.js",
+  "main": "tsOutput/app/app.js",
   "scripts": {
     "build": "tsc",
     "runServerAction": "node tsOutput/app/app.js",

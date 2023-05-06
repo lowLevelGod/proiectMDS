@@ -2,29 +2,59 @@ import express, { Express, Request, Response, RequestHandler, NextFunction } fro
 import { PostLike, knexInstance } from '../utils/globals';
 import { craftError, errorCodes } from '../utils/error';
 
+function postLikeExists(postLike: PostLike): Promise<PostLike> {
+    return knexInstance('PostLikes')
+        .select('*')
+        .where('userId', postLike.userId)
+        .andWhere('postId', postLike.postId)
+        .first();
+}
+
 export class PostLikesController {
 
     create(req: Request, res: Response, next: NextFunction) {
-        
+
         let postLike: PostLike = {
             userId: req.session.user!.id,
             postId: req.body.postId,
         };
 
-        knexInstance('PostLikes')
-            .insert(postLike)
-            .then(x => res.status(200).json({ error: undefined, content: postLike }))
-            .catch(err => {
-                console.error(err.message);
-                const error = craftError(errorCodes.other, "Please try again!");
-                return res.status(500).json({ error, content: undefined});
+        postLikeExists(postLike)
+            .then((x: PostLike) => {
+                if (x) {
+
+                    throw {
+                        error: craftError(errorCodes.entityExists, "You already liked this post!"),
+                        content: undefined,
+                    }
+
+                    return;
+                }
             })
+            .then(() => {
+
+                knexInstance('PostLikes')
+                    .insert(postLike)
+                    .then(x => res.status(200).json({ error: undefined, content: postLike }));
+
+            })
+            .catch(err => {
+                if (!err.error) {
+                    console.error(err.message);
+                    const error = craftError(errorCodes.other, "Please try again!");
+                    return res.status(500).json({ error, content: undefined });
+                } else {
+                    console.error(err.error.errorMsg);
+                    return res.status(400).json(err);
+                }
+            });
+
     }
 
     getPostLikes(req: Request, res: Response, next: NextFunction) {
-        const postId = req.params.postId;
-
-        if (!postId || typeof postId != 'string') {
+        const postId = req.params.id;
+        
+        if (!postId) {
             const error = craftError(errorCodes.notFound, "Post not found!");
             return res.status(404).json({ error, content: undefined });
         }
@@ -34,11 +64,7 @@ export class PostLikesController {
             .from('PostLikes')
             .where('postId', postId)
             .then(rows => {
-                const likes: PostLike[] = rows.map(row => ({
-                    userId: row.userId,
-                    postId: row.postId
-                }));
-                return res.status(200).json({ error: undefined, content: likes });
+                return res.status(200).json({ error: undefined, content: rows });
             })
             .catch(err => {
                 console.error(err.message);
@@ -51,7 +77,7 @@ export class PostLikesController {
 
         let postLike: PostLike = {
             userId: req.session.user!.id,
-            postId: req.params.postId
+            postId: req.params.id,
         };
 
         knexInstance
@@ -63,16 +89,17 @@ export class PostLikesController {
                     const error = craftError(errorCodes.notFound, "No like found for this post and user!");
                     return res.status(404).json({ error, content: undefined });
                 }
+                return res.status(200).json({ error: undefined, content: undefined });
             })
             .catch(err => {
                 console.error(err.message);
                 const error = craftError(errorCodes.other, "Please try again!");
-                return res.status(500).json({ error, content: undefined});
+                return res.status(500).json({ error, content: undefined });
             })
     }
 
     getPostLikesCount(req: Request, res: Response, next: NextFunction) {
-        const postId = req.params.postId;
+        const postId = req.params.id;
 
         // Check if post exists
         knexInstance('Posts')
@@ -80,8 +107,10 @@ export class PostLikesController {
             .where('id', postId)
             .then(rows => {
                 if (rows.length === 0) {
-                    const error = craftError(errorCodes.notFound, "Post not found!");
-                    return res.status(404).json({ error, content: undefined });
+                    throw {
+                        error: craftError(errorCodes.notFound, "Post not found!"),
+                        content: undefined,
+                    }
                 }
             })
             .then(() => {
@@ -91,17 +120,17 @@ export class PostLikesController {
                     .where('postId', postId)
                     .then(count => {
                         return res.status(200).json({ error: undefined, content: count });
-                    })
-                    .catch(err => {
-                        console.error(err.message);
-                        const error = craftError(errorCodes.other, "Please try again");
-                        return res.status(500).json({ error, content: undefined });
-                    })
+                    });
             })
-            .catch(err =>{
-                console.error(err.message);
-                const error = craftError(errorCodes.other, "Please try again!");
-                return res.status(500).json({ error, content: undefined });
+            .catch(err => {
+                if (!err.error) {
+                    console.error(err.message);
+                    const error = craftError(errorCodes.other, "Please try again!");
+                    return res.status(500).json({ error, content: undefined });
+                } else {
+                    console.error(err.error.errorMsg);
+                    return res.status(404).json(err);
+                }
             });
     }
 }

@@ -2,29 +2,58 @@ import express, { Express, Request, Response, RequestHandler, NextFunction } fro
 import { CommentLike, knexInstance } from '../utils/globals';
 import { craftError, errorCodes } from '../utils/error';
 
+function commentLikeExists(commentLike: CommentLike): Promise<CommentLike> {
+    return knexInstance('CommentLikes')
+        .select('*')
+        .where('userId', commentLike.userId)
+        .andWhere('commentId', commentLike.commentId)
+        .first();
+}
+
 export class CommentLikesController {
 
     create(req: Request, res: Response, next: NextFunction) {
-        
+
         let commentLike: CommentLike = {
             userId: req.session.user!.id,
             commentId: req.body.commentId,
         };
 
-        knexInstance('CommentLikes')
-            .insert(commentLike)
-            .then(x => res.status(200).json({ error: undefined, content: commentLike }))
-            .catch(err => {
-                console.error(err.message);
-                const error = craftError(errorCodes.other, "Please try again!");
-                return res.status(500).json({ error, content: undefined });
+        commentLikeExists(commentLike)
+            .then((x: CommentLike) => {
+                if (x) {
+
+                    throw {
+                        error: craftError(errorCodes.entityExists, "You already liked this comment!"),
+                        content: undefined,
+                    }
+
+                    return;
+                }
             })
+            .then(() => {
+
+                knexInstance('CommentLikes')
+                    .insert(commentLike)
+                    .then(x => res.status(200).json({ error: undefined, content: commentLike }));
+
+            })
+            .catch(err => {
+                if (!err.error) {
+                    console.error(err.message);
+                    const error = craftError(errorCodes.other, "Please try again!");
+                    return res.status(500).json({ error, content: undefined });
+                } else {
+                    console.error(err.error.errorMsg);
+                    return res.status(400).json(err);
+                }
+            });
     }
 
     getCommentLikes(req: Request, res: Response, next: NextFunction) {
-        const commentId = req.params.commentId;   
+        const commentId = req.params.id;
 
-        if (!commentId || typeof commentId != 'string') {
+        if (!commentId) {
             const error = craftError(errorCodes.notFound, "Comment not found!");
             return res.status(404).json({ error, content: undefined });
         }
@@ -34,15 +63,7 @@ export class CommentLikesController {
             .from('CommentLikes')
             .where('commentId', commentId)
             .then(rows => {
-                if (rows.length === 0) {
-                    const error = craftError(errorCodes.notFound, "No likes found for this comment!");
-                    return res.status(404).json({ error, content: undefined });
-                }
-                const likes: CommentLike[] = rows.map(row => ({
-                    userId: row.userId,
-                    commentId: row.commentId
-                }));
-                return res.status(200).json({ error: undefined, content: likes });
+                return res.status(200).json({ error: undefined, content: rows });
             })
             .catch(err => {
                 console.error(err.message);
@@ -52,10 +73,10 @@ export class CommentLikesController {
     }
 
     deleteLike(req: Request, res: Response, next: NextFunction) {
-    
+
         let commentLike: CommentLike = {
             userId: req.session.user!.id,
-            commentId: req.params.commentId
+            commentId: req.params.id,
         };
 
         knexInstance
@@ -77,7 +98,7 @@ export class CommentLikesController {
     }
 
     getCommentLikesCount(req: Request, res: Response, next: NextFunction) {
-        const commentId = req.params.commentId;
+        const commentId = req.params.id;
 
         // Check if comment exists
         knexInstance('Comments')
@@ -85,8 +106,10 @@ export class CommentLikesController {
             .where('id', commentId)
             .then(rows => {
                 if (rows.length === 0) {
-                    const error = craftError(errorCodes.notFound, "Comment not found!");
-                    return res.status(404).json({ error, content: undefined });
+                    throw {
+                        error: craftError(errorCodes.notFound, "Comment not found!"),
+                        content: undefined,
+                    }
                 }
             })
             .then(() => {
@@ -96,17 +119,17 @@ export class CommentLikesController {
                     .where('commentId', commentId)
                     .then(count => {
                         return res.status(200).json({ error: undefined, content: count });
-                    })
-                    .catch(err => {
-                        console.error(err.message);
-                        const error = craftError(errorCodes.other, "Please try again!");
-                        return res.status(500).json({ error, content: undefined });
                     });
             })
-            .catch(err =>{
-                console.error(err.message);
-                const error = craftError(errorCodes.other, "Please try again!");
-                return res.status(500).json({ error, content: undefined });
+            .catch(err => {
+                if (!err.error) {
+                    console.error(err.message);
+                    const error = craftError(errorCodes.other, "Please try again!");
+                    return res.status(500).json({ error, content: undefined });
+                } else {
+                    console.error(err.error.errorMsg);
+                    return res.status(404).json(err);
+                }
             });
     }
 }
