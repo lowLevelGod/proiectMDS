@@ -19,6 +19,8 @@ import { postRouter } from './routes/PostRoutes';
 import { commentRouter } from './routes/CommentRoutes';
 import { followerRouter } from './routes/FollowerRoutes';
 import { profileRouter } from './routes/ProfileRoutes';
+import { postLikeRouter } from './routes/PostLikeRoutes';
+import { commentLikeRouter } from './routes/CommentLikeRoutes';
 
 const app: Express = express();
 const port: number = 8080;
@@ -72,6 +74,8 @@ app.use(postRouter);
 app.use(commentRouter);
 app.use(followerRouter);
 app.use(profileRouter);
+app.use(postLikeRouter);
+app.use(commentLikeRouter);
 
 const httpsServer = https.createServer(options, app);
 httpsServer.listen(port, () => {
