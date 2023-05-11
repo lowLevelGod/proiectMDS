@@ -5,6 +5,14 @@ import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
 
+
+export function getPostsByUser(userId: string) : Promise<Post[]> {
+    return knexInstance
+        .select('*')
+        .from('Posts')
+        .where('userId', userId);
+}
+
 function getPostMetaData(post: Post): Partial<Post> {
     let postMetaData: Partial<Post> = {
         id: post.id,
@@ -146,11 +154,8 @@ export class PostController {
 
     // metadata for all posts made by user
     getPostsByUser(req: Request, res: Response, next: NextFunction) {
-        const userId = req.query['userid'];
-        knexInstance
-            .select('*')
-            .from('Posts')
-            .where('userId', userId)
+        const userId = req.query['userid'] as string; 
+        getPostsByUser(userId!)
             .then(arr => {
                 if (arr.length === 0) {
                     const error = craftError(errorCodes.notFound, "No post found for this user!");
@@ -170,31 +175,31 @@ export class PostController {
 
     // sends urls to post media
     getPostMedia(req: Request, res: Response, next: NextFunction) {
-            knexInstance
-                .select('userId', 'picturesURLs')
-                .from('Posts')
-                .where('id', req.params.id)
-                .then(arr => {
-                    if (arr.length === 0) {
-                        const error = craftError(errorCodes.notFound, "Post not found!");
-                        return res.status(404).json({ error, content: undefined });
-                    }
+        knexInstance
+            .select('userId', 'picturesURLs')
+            .from('Posts')
+            .where('id', req.params.id)
+            .then(arr => {
+                if (arr.length === 0) {
+                    const error = craftError(errorCodes.notFound, "Post not found!");
+                    return res.status(404).json({ error, content: undefined });
+                }
 
-                    // resources/users/{userID}/pictures/{pictureID}.extension
-                    let newPath: string = path.join('users', arr[0].userId, 'pictures');
-                    const paths: string[] = arr[0].picturesURLs!.map((file: string) => path.join(newPath, file));
-                    let partialPost: Partial<Post> = {
-                        picturesURLs: paths,
-                    };
+                // resources/users/{userID}/pictures/{pictureID}.extension
+                let newPath: string = path.join('users', arr[0].userId, 'pictures');
+                const paths: string[] = arr[0].picturesURLs!.map((file: string) => path.join(newPath, file));
+                let partialPost: Partial<Post> = {
+                    picturesURLs: paths,
+                };
 
-                    return res.status(200).json({ error: undefined, content: partialPost });
-                })
-                .catch(err => {
-                    console.error(err.message);
-                    const error = craftError(errorCodes.other, "Please try again!");
-                    return res.status(500).json({ error, content: undefined });
-                });
-        }
+                return res.status(200).json({ error: undefined, content: partialPost });
+            })
+            .catch(err => {
+                console.error(err.message);
+                const error = craftError(errorCodes.other, "Please try again!");
+                return res.status(500).json({ error, content: undefined });
+            });
+    }
 
     patch(req: Request, res: Response, next: NextFunction) {
 
