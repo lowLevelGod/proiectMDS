@@ -17,7 +17,7 @@ function userExists(id: string) {
         .first();
 }
 
-function getAllFollowing(userId: string) {
+export function getAllFollowing(userId: string) {
     return knexInstance('Followers')
         .select('*')
         .where('followedBy', userId);
