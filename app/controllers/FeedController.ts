@@ -3,6 +3,7 @@ import { getAllFollowing } from './FollowersController';
 import { Follower, Post } from '../utils/globals';
 import { getPostsByUser } from './PostController';
 import { craftError, errorCodes } from '../utils/error';
+import path from 'path';
 
 export class FeedController {
     getFeed(req: Request, res: Response, next: NextFunction){
@@ -21,6 +22,13 @@ export class FeedController {
                 results.forEach(r => {
                     if (r.status === "fulfilled"){
                         const arr: Post[] = r.value;
+                        arr.forEach(p => {
+                            p.picturesURLs = p.picturesURLs.map(f => {
+                                const newPath: string = path.join('users', p.userId, 'pictures');
+                                return path.join(newPath, f);
+                            });
+                        });
+
                         posts.push(...arr);
                     }
                 });
