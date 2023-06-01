@@ -1,0 +1,52 @@
+@startuml
+title Instagram-like Project Workflow
+
+start
+:Signup;
+:Login;
+if (Login successful?) then (yes)
+  :Load user profile;
+  while (User is active) is (true)
+    fork
+      if (User visits main feed?) then (yes)
+        :See Main Feed;
+      endif
+      if (User visits user profile?) then (yes)
+        :Visit User Profile;
+        if (User sends follow request?) then (yes)
+          :Follow Request;
+          if (Follow request accepted?) then (yes)
+            :Follow;
+          else (no)
+            :Reject;
+          endif
+        endif
+      endif
+    fork again
+      if (User creates post?) then (yes)
+        :Create Post;
+      endif
+      if (User edits post?) then (yes)
+        :Edit Post;
+      endif
+    fork again
+      if (User comments on post?) then (yes)
+        :Comment;
+      endif
+      if (User edits comment?) then (yes)
+        :Edit Comment;
+      endif
+    fork again
+      if (User likes post/comment?) then (yes)
+        :Like Post/Comment;
+      endif
+    endfork
+    :Wait for user action;
+  endwhile
+  :Logout;
+else (no)
+  :Show error message;
+endif
+stop
+
+@enduml
