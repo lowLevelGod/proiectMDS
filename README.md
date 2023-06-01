@@ -15,15 +15,16 @@ Our social media application allows users to create accounts in order to create 
 
 ### Must-Have
 
-1. As a user, I want to be able to post pictures on my profile and see other people's pictures as well.
-2. As a user, I must have a login form in order to enter my account.
-3. As a user, I must have a signup form in order to create an account.
-4. As a user, I want to be able to send text messages to other users.
-5. As a user, I want to be able to comment and leave reactions on other people's posts.
-6. As a user, I want to be able to enter a separate chat room if I want to thoroughly debate a hot topic brought by other users in a comment or post.
-7. As a user, I want to be able to allow only certain people to see my posts or send me messages.
-8. As a user, I want to be able to search other people's names and connect with them.
-9. As a user, I want to be able to follow certain profiles and see the content they post on my front page.
+1. As a user, I want to be able to post pictures on my profile.
+2. As a user, I want to be able to visit other people's profiles.
+3. As a user, I must have a login form in order to enter my account.
+4. As a user, I must have a signup form in order to create an account.
+5. As a user, I want to be able to like posts and comments.
+6. As a user, I want to be able to leave comments on posts.
+7. As a user, I want to be able to follow other people and get followed by other people.
+8. As a user, I want to see posts from people I follow in my main feed.
+9. As a user, I want to have a profile picture, besides my posts.
+10. As a user, I want to be able to expand replies to existing comments and reply to them.
 
 ### Nice-to-have
 
