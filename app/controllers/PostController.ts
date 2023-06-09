@@ -44,6 +44,10 @@ function getPostOwner(id: string): Promise<Partial<Post> | undefined> {
         });
 }
 
+function craftPictureURLs(picturesURLs: string[], userId: string): string[] {
+    return picturesURLs.map((url) => path.join('users/', userId, 'pictures/', url));
+}
+
 export class PostController {
 
     create(req: Request, res: Response, next: NextFunction) {
@@ -76,6 +80,7 @@ export class PostController {
         knexInstance('Posts')
             .insert(post)
             .then(x => {
+                post.picturesURLs = craftPictureURLs(post.picturesURLs!, post.userId);
                 return res.status(200).json({ error: undefined, content: post });
             })
             .catch(err => {
@@ -134,11 +139,14 @@ export class PostController {
             .select('*')
             .from('Posts')
             .where('id', req.params.id)
-            .then(arr => {
+            .then((arr: Post[]) => {
                 if (arr.length === 0) {
                     const error = craftError(errorCodes.notFound, "Post not found!");
                     return res.status(404).json({ error, content: undefined });
                 }
+
+                const post = arr[0];
+                post.picturesURLs = craftPictureURLs(post.picturesURLs, post.userId);
                 return res.status(200).json({ error: undefined, content: arr[0] });
             })
             .catch(err => {
