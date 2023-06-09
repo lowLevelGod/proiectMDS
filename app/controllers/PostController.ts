@@ -76,10 +76,7 @@ export class PostController {
         knexInstance('Posts')
             .insert(post)
             .then(x => {
-
-                // we don't want to send file paths to client
-                let postMetaData: Partial<Post> = getPostMetaData(post);
-                return res.status(200).json({ error: undefined, content: postMetaData });
+                return res.status(200).json({ error: undefined, content: post });
             })
             .catch(err => {
                 console.error(err.message);
@@ -142,7 +139,7 @@ export class PostController {
                     const error = craftError(errorCodes.notFound, "Post not found!");
                     return res.status(404).json({ error, content: undefined });
                 }
-                return res.status(200).json({ error: undefined, content: getPostMetaData(arr[0]) });
+                return res.status(200).json({ error: undefined, content: arr[0] });
             })
             .catch(err => {
                 console.error(err.message);
@@ -162,8 +159,7 @@ export class PostController {
                     return res.status(404).json({ error, content: undefined });
                 }
 
-                const metaArr: Partial<Post>[] = arr.map(p => getPostMetaData(p));
-                return res.status(200).json({ error: undefined, content: metaArr });
+                return res.status(200).json({ error: undefined, content: arr });
 
             })
             .catch(err => {
