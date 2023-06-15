@@ -61,6 +61,24 @@ export class ProfileController {
             })
     }
 
+    getProfileRange(req: Request, res: Response, next: NextFunction) {
+        const idList = req.body.usersIds;
+        console.log(idList);
+        knexInstance
+            .select('*')
+            .from('Profiles')
+            .whereIn('userId', idList)
+            .then(arr => {
+                console.log(arr);
+                return res.status(200).json({ error: undefined, content: arr });
+            })
+            .catch(err => {
+                console.error(err.message);
+                const error = craftError(errorCodes.other, "Please try again!");
+                return res.status(500).json({ error, content: undefined });
+            })
+    }
+
     getProfilePicture(req: Request, res: Response, next: NextFunction) {
         knexInstance
             .select('*')
