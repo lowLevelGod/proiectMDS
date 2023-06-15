@@ -44,6 +44,10 @@ function getPostOwner(id: string): Promise<Partial<Post> | undefined> {
         });
 }
 
+function craftPictureURLs(picturesURLs: string[], userId: string): string[] {
+    return picturesURLs.map((url) => path.join('users/', userId, 'pictures/', url));
+}
+
 export class PostController {
 
     create(req: Request, res: Response, next: NextFunction) {
@@ -76,10 +80,8 @@ export class PostController {
         knexInstance('Posts')
             .insert(post)
             .then(x => {
-
-                // we don't want to send file paths to client
-                let postMetaData: Partial<Post> = getPostMetaData(post);
-                return res.status(200).json({ error: undefined, content: postMetaData });
+                post.picturesURLs = craftPictureURLs(post.picturesURLs!, post.userId);
+                return res.status(200).json({ error: undefined, content: post });
             })
             .catch(err => {
                 console.error(err.message);
@@ -137,12 +139,15 @@ export class PostController {
             .select('*')
             .from('Posts')
             .where('id', req.params.id)
-            .then(arr => {
+            .then((arr: Post[]) => {
                 if (arr.length === 0) {
                     const error = craftError(errorCodes.notFound, "Post not found!");
                     return res.status(404).json({ error, content: undefined });
                 }
-                return res.status(200).json({ error: undefined, content: getPostMetaData(arr[0]) });
+
+                const post = arr[0];
+                post.picturesURLs = craftPictureURLs(post.picturesURLs, post.userId);
+                return res.status(200).json({ error: undefined, content: arr[0] });
             })
             .catch(err => {
                 console.error(err.message);
@@ -162,8 +167,7 @@ export class PostController {
                     return res.status(404).json({ error, content: undefined });
                 }
 
-                const metaArr: Partial<Post>[] = arr.map(p => getPostMetaData(p));
-                return res.status(200).json({ error: undefined, content: metaArr });
+                return res.status(200).json({ error: undefined, content: arr });
 
             })
             .catch(err => {
