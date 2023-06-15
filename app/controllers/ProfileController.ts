@@ -159,6 +159,10 @@ export class ProfileController {
                     updatedProfile.profilePictureURL = req.file.filename;
                 }
 
+                if (Object.keys(updatedProfile).length === 0) {
+                    return res.status(200).json({ error: undefined, content: undefined });   
+                }
+
                 const query = knexInstance('Profiles')
                     .where('id', profile!.id)
                     .update(updatedProfile, '*');
