@@ -63,7 +63,7 @@ app.use(
 
 app.use(
     cors({
-        origin: "https://localhost:4200",
+        origin: "https://www.promeret.social",
         methods: ["POST", "PUT", "GET", "OPTIONS", "HEAD"],
         credentials: true,
     })
