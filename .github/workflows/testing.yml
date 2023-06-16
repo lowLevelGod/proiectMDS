@@ -30,3 +30,21 @@ jobs:
 
           # sftp args
           args: '-o ConnectTimeout=5'
+
+  run:
+    name: Run
+    runs-on: ubuntu-latest
+    depends-on: executing remote ssh commands using password
+    steps:
+      - name: Run
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: promeret.social
+          username: root
+          password: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /root/BackEnd
+            ./shutdown.sh
+            npm install
+            ./startup.sh
