@@ -48,5 +48,5 @@ jobs:
             cd /root/BackEnd
             ./shutdown.sh
             npm install
-            nohup ./starip.sh &
+            nohup ./startup.sh &
             echo "Done!"
