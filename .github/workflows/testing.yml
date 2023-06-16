@@ -47,4 +47,5 @@ jobs:
             cd /root/BackEnd
             ./shutdown.sh
             npm install
-            ./startup.sh
+            ./startup.sh &
+            echo "Done!"

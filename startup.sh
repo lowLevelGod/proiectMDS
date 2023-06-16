@@ -34,14 +34,7 @@ fi
 docker start $REDIS > /dev/null;
 docker start $POSTGRES > /dev/null;
 
-echo "Running node server..."
-
-if [ "$FORKED_TO_BG" = "" ]
-then
-    # Fork self to background
-    FORKED_TO_BG=1 nohup $0 $@ 2>&1 >/dev/null
-    exit 0
-fi
+echo "Running node server...";
 
 npm run dev > /dev/null 2>&1 >> $NODELOG
 
