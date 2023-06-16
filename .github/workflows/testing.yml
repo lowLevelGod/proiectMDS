@@ -34,7 +34,7 @@ jobs:
   run:
     name: Run
     runs-on: ubuntu-latest
-    depends-on: executing remote ssh commands using password
+    needs: executing remote ssh commands using password
     steps:
       - name: Run
         uses: appleboy/ssh-action@v0.1.10
