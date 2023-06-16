@@ -42,10 +42,10 @@ jobs:
           host: promeret.social
           username: root
           password: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 60s
           port: 22
           script: |
             cd /root/BackEnd
             ./shutdown.sh
             npm install
             ./startup.sh&
-            echo "Done!"
