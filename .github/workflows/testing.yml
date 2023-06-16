@@ -48,5 +48,4 @@ jobs:
             cd /root/BackEnd
             ./shutdown.sh
             npm install
-            nohup ./startup.sh &
-            echo "Done!"
+            (nohup ./startup.sh 0<&- &>/dev/null &) && echo "Done!"
