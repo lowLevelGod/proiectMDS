@@ -72,7 +72,7 @@ export class AuthenticationController {
         getUserPassword(req.body.email)
             .then(hash => validateUser(req.body.password, hash))
             .then(isValidated => {
-    
+
                 if (isValidated) {
                     knexInstance
                         .select('id', 'email')
@@ -92,10 +92,10 @@ export class AuthenticationController {
                                     const error = craftError(errorCodes.other, "Please try logging in again!");
                                     return res.status(500).json({ error, content: undefined });
                                 }
-    
+
                                 // store user information in session, typically a user id
                                 req.session.user = sessionUser;
-                                
+                            
                                 return res.status(200).json({ error: undefined, content: sessionUser });
                             })
                         })
@@ -104,18 +104,18 @@ export class AuthenticationController {
                             const error = craftError(errorCodes.other, "Please try logging in again!");
                             return res.status(500).json({ error, content: undefined });
                         });
-    
+
                 } else {
-                    const error = craftError(errorCodes.other, "Email or password wrong!");
+                    const error = craftError(errorCodes.badCredentials, "Email or password wrong!");
                     return res.status(403).json({ error, content: undefined });
                 }
             })
             .catch(err => {
                 console.error(err.message);
-                const error = craftError(errorCodes.other, "Email or password wrong!");
+                const error = craftError(errorCodes.badCredentials, "Email or password wrong!");
                 return res.status(403).json({ error, content: undefined });
             });
-    
+
     }
 
     isAuthenticated(req: Request, res: Response, next: NextFunction) {
@@ -132,7 +132,7 @@ export class AuthenticationController {
 
     logout(req: Request, res: Response, next: NextFunction) {
         // logout logic
-    
+
         // clear the user from the session object and save.
         // this will ensure that re-using the old session id
         // does not have a logged in user
@@ -144,5 +144,37 @@ export class AuthenticationController {
             }
             return res.clearCookie('dinoSnack').status(200).json({ error: undefined, content: undefined });
         })
+    }
+
+    delete(req: Request, res: Response, next: NextFunction) {
+
+        knexInstance('Users')
+            .where('id', req.session.user!.id)
+            .del()
+            .then(x => {
+                if (x === 0) {
+                    const error = craftError(errorCodes.notFound, "User not found!");
+                    return res.status(404).json({ error, content: undefined });
+                }
+
+                // logout logic
+
+                // clear the user from the session object and save.
+                // this will ensure that re-using the old session id
+                // does not have a logged in user
+                req.session.user = undefined;
+                req.session.destroy(function (err) {
+                    if (err) {
+                        const error = craftError(errorCodes.other, "Log out failed!");
+                        return res.status(500).json({ error, content: undefined });
+                    }
+                    return res.clearCookie('dinoSnack').status(200).json({ error: undefined, content: undefined });
+                });
+            })
+            .catch(err => {
+                console.error(err.message);
+                const error = craftError(errorCodes.other, "Please try again!");
+                return res.status(500).json({ error, content: undefined });
+            });
     }
 }

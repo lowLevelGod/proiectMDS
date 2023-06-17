@@ -1,5 +1,5 @@
 import express, { Express, Request, Response, RequestHandler, NextFunction } from 'express';
-import { Follower, Profile, User, craftProfilePictureDest, knexInstance } from '../utils/globals';
+import { Follower, Profile, User, craftProfilePictureDest, craftProfilePictureURL, knexInstance } from '../utils/globals';
 import { craftError, errorCodes } from '../utils/error';
 import { File, Post, craftPictureDest, deleteFiles, moveFiles, zipDirectory } from '../utils/globals';
 import { v4 as uuidv4 } from 'uuid';
@@ -52,7 +52,10 @@ export class ProfileController {
                     const error = craftError(errorCodes.notFound, "Profile not found!");
                     return res.status(404).json({ error, content: undefined });
                 }
-                return res.status(200).json({ error: undefined, content: arr[0] });
+
+                const profile = arr[0];
+                profile.profilePictureURL = path.join(craftProfilePictureURL(profile.userId, profile.profilePictureURL));
+                return res.status(200).json({ error: undefined, content: profile });
             })
             .catch(err => {
                 console.error(err.message);
@@ -116,9 +119,7 @@ export class ProfileController {
         knexInstance('Profiles')
             .insert(profile)
             .then(x => {
-                // we don't send image url
-                let profileMetaData: Partial<Profile> = getProfileMetaData(profile);
-                return res.status(200).json({ error: undefined, content: profileMetaData });
+                return res.status(200).json({ error: undefined, content: profile });
             })
             .catch(err => {
                 console.error(err.message);
@@ -174,8 +175,7 @@ export class ProfileController {
                             return res.status(404).json({ error, content: undefined });
                         }
 
-                        const metadataProfile = getProfileMetaData(arr[0]);
-                        return res.status(200).json({ error: undefined, content: metadataProfile });
+                        return res.status(200).json({ error: undefined, content: arr[0] });
                     })
                     .catch(err => {
                         console.error(err.message);

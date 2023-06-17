@@ -5,7 +5,7 @@
 CREATE TABLE IF NOT EXISTS public."Posts"
 (
     id text COLLATE pg_catalog."default" NOT NULL,
-    "createdAt" date NOT NULL,
+    "createdAt" timestamp NOT NULL,
     "userId" text COLLATE pg_catalog."default" NOT NULL,
     description text COLLATE pg_catalog."default",
     "picturesURLs" text[] COLLATE pg_catalog."default" NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public."Posts"
     CONSTRAINT "posts_userId_fkey" FOREIGN KEY ("userId")
         REFERENCES public."Users" (id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+        ON DELETE CASCADE
 )
 
 TABLESPACE pg_default;

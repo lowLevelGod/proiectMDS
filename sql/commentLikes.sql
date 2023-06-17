@@ -10,11 +10,11 @@ CREATE TABLE IF NOT EXISTS public."CommentLikes"
     CONSTRAINT "commentLikes_userId_fkey" FOREIGN KEY ("userId")
         REFERENCES public."Users" (id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION,
+        ON DELETE CASCADE,
     CONSTRAINT "commentLikes_commentId_fkey" FOREIGN KEY ("commentId")
         REFERENCES public."Comments" (id) MATCH SIMPLE
         ON UPDATE NO ACTION
-        ON DELETE NO ACTION
+        ON DELETE CASCADE
 )
 
 TABLESPACE pg_default;

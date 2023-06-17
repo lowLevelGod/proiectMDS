@@ -7,6 +7,7 @@ export const errorCodes = Object.freeze({
     notFound: 6,
     noContent: 7,
     entityExists: 8,
+    badCredentials: 9,
 });
 
 export interface Error {

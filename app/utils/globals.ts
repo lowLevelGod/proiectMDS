@@ -8,12 +8,13 @@ import multer, { Multer, MulterError } from 'multer';
 import session from "express-session";
 import express, { Express, Request, Response, RequestHandler, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { craftError, errorCodes } from './error';
+import { craftError, Error, errorCodes } from './error';
 import { CommentsController } from '../controllers/CommentsController';
 import { FollowersController } from '../controllers/FollowersController';
 import { PostLikesController } from '../controllers/PostLikesController'; 
 import { CommentLikesController } from '../controllers/CommentLikesController'; 
 import { ProfileController, getProfileByUserId } from '../controllers/ProfileController';
+import { FeedController } from '../controllers/FeedController';
 
 // database connection
 const knexConfig: Knex.Config = {
@@ -103,6 +104,11 @@ export interface Follower{
     accepted: boolean,
 }
 
+export interface GenericResponse<TResponse> {
+    error: Error;
+    content: TResponse;
+  }
+
 const multerPosts = multer.diskStorage({
     destination: (req: Request, file, cb) => {
         // resources/users/{userID}/pictures/{pictureID}.extension
@@ -178,6 +184,10 @@ export function craftPictureDest(userId: string): string {
 
 export function craftProfilePictureDest(userId: string): string {
     return path.join("resources/users/", userId, "profile/");
+}
+
+export function craftProfilePictureURL(userId: string, pictureName: string): string {
+    return path.join("users/", userId, "profile/", pictureName);
 }
 
 export function moveFiles(dir: string, files: string[], callback: Function) {
@@ -305,3 +315,4 @@ export const followerController: FollowersController = new FollowersController()
 export const postLikeController: PostLikesController = new PostLikesController();
 export const commentLikeController: CommentLikesController = new CommentLikesController();
 export const profileController: ProfileController = new ProfileController();
+export const feedController: FeedController = new FeedController();

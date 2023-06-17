@@ -5,6 +5,14 @@ import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
 
+
+export function getPostsByUser(userId: string) : Promise<Post[]> {
+    return knexInstance
+        .select('*')
+        .from('Posts')
+        .where('userId', userId);
+}
+
 function getPostMetaData(post: Post): Partial<Post> {
     let postMetaData: Partial<Post> = {
         id: post.id,
@@ -34,6 +42,10 @@ function getPostOwner(id: string): Promise<Partial<Post> | undefined> {
             console.error(err.message);
             return undefined;
         });
+}
+
+function craftPictureURLs(picturesURLs: string[], userId: string): string[] {
+    return picturesURLs.map((url) => path.join('users/', userId, 'pictures/', url));
 }
 
 export class PostController {
@@ -68,10 +80,8 @@ export class PostController {
         knexInstance('Posts')
             .insert(post)
             .then(x => {
-
-                // we don't want to send file paths to client
-                let postMetaData: Partial<Post> = getPostMetaData(post);
-                return res.status(200).json({ error: undefined, content: postMetaData });
+                post.picturesURLs = craftPictureURLs(post.picturesURLs!, post.userId);
+                return res.status(200).json({ error: undefined, content: post });
             })
             .catch(err => {
                 console.error(err.message);
@@ -129,12 +139,15 @@ export class PostController {
             .select('*')
             .from('Posts')
             .where('id', req.params.id)
-            .then(arr => {
+            .then((arr: Post[]) => {
                 if (arr.length === 0) {
                     const error = craftError(errorCodes.notFound, "Post not found!");
                     return res.status(404).json({ error, content: undefined });
                 }
-                return res.status(200).json({ error: undefined, content: getPostMetaData(arr[0]) });
+
+                const post = arr[0];
+                post.picturesURLs = craftPictureURLs(post.picturesURLs, post.userId);
+                return res.status(200).json({ error: undefined, content: arr[0] });
             })
             .catch(err => {
                 console.error(err.message);
@@ -146,19 +159,15 @@ export class PostController {
 
     // metadata for all posts made by user
     getPostsByUser(req: Request, res: Response, next: NextFunction) {
-        const userId = req.query['userid'];
-        knexInstance
-            .select('*')
-            .from('Posts')
-            .where('userId', userId)
+        const userId = req.query['userid'] as string; 
+        getPostsByUser(userId!)
             .then(arr => {
                 if (arr.length === 0) {
                     const error = craftError(errorCodes.notFound, "No post found for this user!");
                     return res.status(404).json({ error, content: undefined });
                 }
 
-                const metaArr: Partial<Post>[] = arr.map(p => getPostMetaData(p));
-                return res.status(200).json({ error: undefined, content: metaArr });
+                return res.status(200).json({ error: undefined, content: arr });
 
             })
             .catch(err => {

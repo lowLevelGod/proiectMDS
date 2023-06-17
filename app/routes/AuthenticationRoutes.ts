@@ -7,3 +7,4 @@ auth.post('/signup', authenticationController.signup);
 auth.post('/login', authenticationController.login);
 auth.get('/whoami', authenticationController.isAuthenticated, authenticationController.whoami);
 auth.get('/logout', authenticationController.logout);
+auth.delete('/users/delete', authenticationController.isAuthenticated, authenticationController.delete);

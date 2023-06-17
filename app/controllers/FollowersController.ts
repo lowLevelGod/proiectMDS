@@ -17,7 +17,7 @@ function userExists(id: string) {
         .first();
 }
 
-function getAllFollowing(userId: string) {
+export function getAllFollowing(userId: string) {
     return knexInstance('Followers')
         .select('*')
         .where('followedBy', userId);
@@ -30,8 +30,8 @@ function getAllFollowers(userId: string) {
 }
 
 export class FollowersController {
-    request(req: Request, res: Response, next: NextFunction) {
-        userExists(req.body.userId)
+    request(req: Request<{}, {}, Partial<Follower>>, res: Response, next: NextFunction) {
+        userExists(req.body.follows!)
             .then((user: User) => {
                 if (user) {
                     if (user.id == req.session.user!.id) {
@@ -47,7 +47,7 @@ export class FollowersController {
                     content: undefined,
                 }
             })
-            .then(() => getFollower(req.body.userId, req.session.user!.id))
+            .then(() => getFollower(req.body.follows!, req.session.user!.id))
             .then((follower: Follower) => {
                 if (follower) {
                     let msg = follower.accepted ? "Already following!" : "Follow request already sent!";
@@ -57,7 +57,7 @@ export class FollowersController {
                     }
                 } else {
                     let newFollower: Follower = {
-                        follows: req.body.userId,
+                        follows: req.body.follows!,
                         followedBy: req.session.user!.id,
                         accepted: false,
                     }
@@ -87,15 +87,15 @@ export class FollowersController {
             });
     }
 
-    accept(req: Request, res: Response, next: NextFunction) {
+    accept(req: Request<{}, {}, Partial<Follower>>, res: Response, next: NextFunction) {
 
-        if (!req.body.userId) {
+        if (!req.body.follows) {
             const error = craftError(errorCodes.noContent, "User id cannot be null!");
             return res.status(403).json({ error, content: undefined });
         }
 
         let newFollower: Partial<Follower> = {
-            followedBy: req.body.userId,
+            followedBy: req.body.follows,
             accepted: req.body.accepted,
         };
 
@@ -110,7 +110,7 @@ export class FollowersController {
                     content: undefined,
                 }
             })
-            .then(() => getFollower(req.session.user!.id, req.body.userId))
+            .then(() => getFollower(req.session.user!.id, req.body.follows!))
             .then((follower: Follower) => {
                 if (!follower) {
                     throw {
@@ -155,12 +155,12 @@ export class FollowersController {
     }
 
     delete(req: Request, res: Response, next: NextFunction) {
-        if (!req.body.userId) {
+        if (!req.params.userId) {
             const error = craftError(errorCodes.noContent, "User id cannot be null!");
             return res.status(403).json({ error, content: undefined });
         }
 
-        userExists(req.body.userId)
+        userExists(req.params.userId)
             .then((user: User) => {
                 if (user) {
                     return;
@@ -171,7 +171,7 @@ export class FollowersController {
                     content: undefined,
                 }
             })
-            .then(() => getFollower(req.session.user!.id, req.body.userId))
+            .then(() => getFollower(req.session.user!.id, req.params.userId))
             .then((follower: Follower) => {
                 if (!follower) {
                     throw {
