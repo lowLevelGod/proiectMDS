@@ -11,7 +11,7 @@ function getAllUsers() {
 }
 
 export class FeedController {
-    async getFeed(req: Request, res: Response, next: NextFunction) {
+    getFeed(req: Request, res: Response, next: NextFunction) {
 
         const userId = req.session.user?.id!;
 
