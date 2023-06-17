@@ -22,7 +22,6 @@ jobs:
           port: 22 # default is 22
           password: ${{ secrets.SSH_PRIVATE_KEY }}
 
-
           # will put all file under this path
           local_path: ./*
           # files will copy to under remote_path
@@ -30,3 +29,22 @@ jobs:
 
           # sftp args
           args: '-o ConnectTimeout=5'
+
+  run:
+    name: Run
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Run
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: promeret.social
+          username: root
+          password: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 60s
+          port: 22
+          script: |
+            cd /root/BackEnd
+            ./shutdown.sh
+            npm install
+            (nohup ./startup.sh 0<&- &>/dev/null &) && echo "Done!"
