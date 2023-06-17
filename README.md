@@ -33,9 +33,9 @@ Our social media application allows users to create accounts in order to create 
 12. As a user, I want to get content recommendations based on posts I liked previously.
 13. As a user, I want to get notifications.
 
-##Help from AI tools when coding
-[link1](https://chat.openai.com/share/d8d986d1-f71e-418b-8325-75185439da00)
-[link2](https://chat.openai.com/share/5f4c0866-03e5-4ab6-b6ed-1abd92c49d8e)
+## Help from AI tools when coding
+- [link1](https://chat.openai.com/share/d8d986d1-f71e-418b-8325-75185439da00)
+- [link2](https://chat.openai.com/share/5f4c0866-03e5-4ab6-b6ed-1abd92c49d8e)
 
 ## UML
 
