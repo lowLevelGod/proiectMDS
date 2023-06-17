@@ -119,7 +119,7 @@ export class PostLikesController {
                     .from('PostLikes')
                     .where('postId', postId)
                     .then(count => {
-                        return res.status(200).json({ error: undefined, content: count });
+                        return res.status(200).json({ error: undefined, content: count[0] });
                     });
             })
             .catch(err => {
