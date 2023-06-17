@@ -5,7 +5,7 @@
 CREATE TABLE IF NOT EXISTS public."Comments"
 (
     id text COLLATE pg_catalog."default" NOT NULL,
-    "createdAt" date NOT NULL,
+    "createdAt" timestamp NOT NULL,
     "userId" text COLLATE pg_catalog."default" NOT NULL,
     "postId" text COLLATE pg_catalog."default" NOT NULL,
     content text COLLATE pg_catalog."default" NOT NULL,
