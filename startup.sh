@@ -6,7 +6,6 @@ REDIS=redisMDS;
 POSTGRES=postgresMDS;
 POSTGRESPORT=5432;
 REDISPORT=6379;
-ANGULAR=proiectMDSAngular;
 NODELOG=node.log;
 NGLOG=ng.log;
 
@@ -35,7 +34,7 @@ fi
 docker start $REDIS > /dev/null;
 docker start $POSTGRES > /dev/null;
 
-echo "Running node server..."
+echo "Running node server...";
 
-npm run dev > /dev/null 2>&1 >> $NODELOG &
-cd $ANGULAR && nohup ng serve > $NGLOG 2>&1 >> $NGLOG;
+npm run dev > /dev/null 2>&1 >> $NODELOG
+
