@@ -14,8 +14,8 @@ docker version;
 retVal=$?;
 
 if [ $retVal -ne 0 ]; then
-		echo "Docker must be installed to run this script. Install Docker and try again.";
-		exit 1;
+	echo "Docker must be installed to run this script. Install Docker and try again.";
+	exit 1;
 fi
 
 docker container inspect $REDIS > /dev/null 2>&1;

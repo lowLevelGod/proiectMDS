@@ -180,4 +180,39 @@ export class CommentsController {
             });
     }
 
+    getCommentsCount(req: Request, res: Response, next: NextFunction) {
+        const postId = req.params.id;
+
+        // Check if post exists
+        knexInstance('Posts')
+            .select('id')
+            .where('id', postId)
+            .then(rows => {
+                if (rows.length === 0) {
+                    throw {
+                        error: craftError(errorCodes.notFound, "Post not found!"),
+                        content: undefined,
+                    }
+                }
+            })
+            .then(() => {
+                knexInstance
+                    .count()
+                    .from('Comments')
+                    .where('postId', postId)
+                    .then(count => {
+                        return res.status(200).json({ error: undefined, content: count[0] });
+                    });
+            })
+            .catch(err => {
+                if (!err.error) {
+                    console.error(err.message);
+                    const error = craftError(errorCodes.other, "Please try again!");
+                    return res.status(500).json({ error, content: undefined });
+                } else {
+                    console.error(err.error.errorMsg);
+                    return res.status(404).json(err);
+                }
+            });
+    }
 }

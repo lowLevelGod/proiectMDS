@@ -95,7 +95,7 @@ export class AuthenticationController {
 
                                 // store user information in session, typically a user id
                                 req.session.user = sessionUser;
-
+                            
                                 return res.status(200).json({ error: undefined, content: sessionUser });
                             })
                         })

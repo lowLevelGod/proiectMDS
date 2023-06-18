@@ -64,6 +64,48 @@ export class ProfileController {
             })
     }
 
+    getProfileRange(req: Request, res: Response, next: NextFunction) {
+        const idList = req.body.usersIds;
+        console.log(idList);
+        knexInstance
+            .select('*')
+            .from('Profiles')
+            .whereIn('userId', idList)
+            .then(arr => {
+                console.log(arr);
+                return res.status(200).json({ error: undefined, content: arr });
+            })
+            .catch(err => {
+                console.error(err.message);
+                const error = craftError(errorCodes.other, "Please try again!");
+                return res.status(500).json({ error, content: undefined });
+            })
+    }
+
+    getProfilePicture(req: Request, res: Response, next: NextFunction) {
+        knexInstance
+            .select('*')
+            .from('Profiles')
+            .where('id', req.params.id)
+            .then(arr => {
+                if (arr.length === 0) {
+                    const error = craftError(errorCodes.notFound, "Profile not found!");
+                    return res.status(404).json({ error, content: undefined });
+                }
+                // resources/users/{userId}/profile/{pictureId}.extension
+                const profilePicturePath = path.join('users', arr[0].userId, 'profile', arr[0].profilePictureURL);
+                let partialProfile: Partial<Profile> = {
+                    profilePictureURL: profilePicturePath,
+                }
+                return res.status(200).json({ error: undefined, content: partialProfile });
+            })
+            .catch(err => {
+                console.error(err.message);
+                const error = craftError(errorCodes.other, "Please try again!");
+                return res.status(500).json({ error, content: undefined });
+            })
+    }
+
     create(req: Request, res: Response, next: NextFunction) {
         let profile = {
             id: uuidv4(),
@@ -102,7 +144,7 @@ export class ProfileController {
                 }
 
                 if (req.body.bio !== undefined) {
-                     updatedProfile.bio = req.body.bio;
+                    updatedProfile.bio = req.body.bio;
                 }
 
                 if (req.file) {
@@ -116,6 +158,10 @@ export class ProfileController {
                         })
                     }  
                     updatedProfile.profilePictureURL = req.file.filename;
+                }
+
+                if (Object.keys(updatedProfile).length === 0) {
+                    return res.status(200).json({ error: undefined, content: undefined });   
                 }
 
                 const query = knexInstance('Profiles')
