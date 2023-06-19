@@ -2,7 +2,7 @@ import express, { Express, Request, Response, RequestHandler, NextFunction } fro
 import { Follower, User, knexInstance } from '../utils/globals';
 import { craftError, errorCodes } from '../utils/error';
 
-function getFollower(follows: string, followedBy: string) {
+function getFollower(followedBy: string, follows: string,) {
     return knexInstance('Followers')
         .select('*')
         .where('follows', follows)
@@ -31,6 +31,7 @@ function getAllFollowers(userId: string) {
 
 export class FollowersController {
     request(req: Request<{}, {}, Partial<Follower>>, res: Response, next: NextFunction) {
+        console.log("Sunt in request");
         userExists(req.body.follows!)
             .then((user: User) => {
                 if (user) {
@@ -180,7 +181,7 @@ export class FollowersController {
                     }
                 }
 
-                if (follower.follows !== req.session.user!.id) {
+                if (follower.followedBy !== req.session.user!.id) {
                     throw {
                         error: craftError(errorCodes.unAuthorized, "Cannot delete follow on behalf of another user!"),
                         content: undefined,
