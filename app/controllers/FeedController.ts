@@ -58,7 +58,7 @@ export class FeedController {
                             if (!res1 && res2)
                                 return 1;
 
-                            return a.createdAt.valueOf() - b.createdAt.valueOf()
+                            return b.createdAt.valueOf() - a.createdAt.valueOf()
                         });
                     })
                     .then((posts: Post[]) => {
